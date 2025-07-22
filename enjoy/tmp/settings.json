@@ -1,7 +1,11 @@
 {
-  "library": "/Users/Work/Pagoda/this/enjoy/enjoy/tmp/EnjoyLibrary",
+  "library": "/Users/Work/Pagoda/this/Enjoy-Ultimate/enjoy/tmp/EnjoyLibrary",
   "proxy": {
     "enabled": false,
     "url": ""
+  },
+  "user": {
+    "id": 24009702,
+    "name": "Baizer-Github"
   }
 }

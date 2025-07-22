@@ -11,6 +11,10 @@
 ```bash
 yarn install
 yarn start
+
+# 在 settings.json 指定 LibraryPath 
+# /Users/Work/Pagoda/this/Enjoy-Ultimate/enjoy/tmp/settings.json
+yarn dev
 ```
 
 ## 打包命令
@@ -19,6 +23,9 @@ yarn start
 # 打包为macOS应用
 yarn package  # 打包应用
 yarn make     # 创建安装包 （/out/xxx）
+
+yarn package --version=1.0.0  # 打包应用并指定版本号
+yarn make --version=1.0.0     # 创建安装包并指定版本号（/out/xxx）
 ```
 
 ```bash
@@ -72,8 +79,6 @@ yarn make --platform=win32 --arch=x64
 3. 替换 `/assets/` 目录下的对应图标文件
 4. 重新构建应用：
    ```bash
-   yarn package --version=1.0.0  # 打包应用并指定版本号
-   yarn make --version=1.0.0     # 创建安装包并指定版本号（/out/xxx）
    yarn package
    yarn make
    ```

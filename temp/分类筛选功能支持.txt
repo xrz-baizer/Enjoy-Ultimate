@@ -1,3 +1,4 @@
+你可以通过阅读readme.md了解项目。
 
 在 audios-component.tsx 组件上，这是一个结构良好的 React 组件，实现音频的显示、搜索、排序和管理功能。
 
