@@ -68,8 +68,8 @@ export const TranscriptionCreateForm = (props: {
     resolver: zodResolver(transcriptionSchema),
     values: {
       language: learningLanguage,
-      service: originalText ? "upload" : SttEngineOptionEnum.LOCAL,
-      text: originalText,
+      service: "upload",
+      text: originalText || "",
       isolate: false,
     },
   });
@@ -215,33 +215,6 @@ export const TranscriptionCreateForm = (props: {
             </FormItem>
           )}
         />
-
-        <FormField
-          control={form.control}
-          name="language"
-          render={({ field }) => (
-            <FormItem className="grid w-full items-center">
-              <FormLabel>{t("language")}</FormLabel>
-              <Select
-                disabled={transcribing}
-                value={field.value}
-                onValueChange={field.onChange}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LANGUAGES.map((language) => (
-                    <SelectItem key={language.code} value={language.code}>
-                      {language.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         {form.watch("service") === "upload" && (
           <>
             <FormField
@@ -251,7 +224,7 @@ export const TranscriptionCreateForm = (props: {
                 <FormItem className="grid w-full items-center">
                   {field.value != undefined && (
                     <>
-                      <FormLabel>{t("transcript")}</FormLabel>
+                      <FormLabel>{t("Transcript")}</FormLabel>
                       <Textarea
                         className="h-36"
                         {...field}
@@ -265,9 +238,36 @@ export const TranscriptionCreateForm = (props: {
             />
           </>
         )}
+
+        <FormField
+            control={form.control}
+            name="language"
+            render={({ field }) => (
+                <FormItem className="grid w-full items-center">
+                  <FormLabel>{t("language")}</FormLabel>
+                  <Select
+                      disabled={transcribing}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LANGUAGES.map((language) => (
+                          <SelectItem key={language.code} value={language.code}>
+                            {language.name}
+                          </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+            )}
+        />
         <Collapsible open={collapsibleOpen} onOpenChange={setCollapsibleOpen}>
           <CollapsibleContent className="mb-4 space-y-4">
-            {form.watch("service") === "upload" && (
+            {/* {form.watch("service") === "upload" && (
               <FormField
                 control={form.control}
                 name="text"
@@ -300,7 +300,7 @@ export const TranscriptionCreateForm = (props: {
                   </FormItem>
                 )}
               />
-            )}
+            )} */}
             <FormField
               control={form.control}
               name="isolate"

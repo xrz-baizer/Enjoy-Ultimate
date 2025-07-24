@@ -87,7 +87,7 @@ export const AudioEditForm = (props: {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"
@@ -105,6 +105,35 @@ export const AudioEditForm = (props: {
           )}
         />
         <FormField
+            control={form.control}
+            name="categoryId"
+            render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("models.audio.category")}</FormLabel>
+                  <FormControl>
+                    <Select
+                        value={field.value}
+                        onValueChange={(value) => field.onChange(value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={t("selectCategory")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {categories.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+            )}
+        />
+        <FormField
           control={form.control}
           name="description"
           render={({ field }) => (
@@ -113,37 +142,9 @@ export const AudioEditForm = (props: {
               <FormControl>
                 <Textarea
                   placeholder={t("models.audio.descriptionPlaceholder")}
+                  rows={5}
                   {...field}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="categoryId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("models.audio.category")}</FormLabel>
-              <FormControl>
-                <Select
-                  value={field.value}
-                  onValueChange={(value) => field.onChange(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("selectCategory")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>

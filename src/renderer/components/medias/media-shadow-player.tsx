@@ -42,7 +42,7 @@ const TopPanel = () => {
   if (layout === "normal") {
     return (
       <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel id="left-panel" order={0} defaultSize={30} minSize={20}>
+        <ResizablePanel id="left-panel" order={0} defaultSize={26} minSize={20}>
           <MediaLeftPanel />
         </ResizablePanel>
         <ResizableHandle />

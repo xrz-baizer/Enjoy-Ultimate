@@ -151,17 +151,24 @@ export const MediaAddButton = (props: {
     };
   }, [submitting]);
 
+  useEffect(() => {
+    const defaultCategory = categories.find((c) => c.name === "Default");
+    if (defaultCategory) {
+      setCategoryId(defaultCategory.id);
+    }
+  }, [categories]);
+
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
       <DialogTrigger asChild>
         <Button className="capitalize">
           <PlusCircleIcon className="mr-2 h-4 w-4" />
-          {t("addResource")}
+          {t("AddResource")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t("addResource")}</DialogTitle>
+          <DialogTitle>{t("AddResource")}</DialogTitle>
         </DialogHeader>
 
         <div className="py-4">
@@ -216,7 +223,26 @@ export const MediaAddButton = (props: {
             />
           </div>
 
-          <div className="grid grid-cols-1 items-center gap-4">
+          {categories.length > 0 && (
+              <div className="grid grid-cols-1 items-center gap-4 mb-4">
+                <Select value={categoryId} onValueChange={setCategoryId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("selectCategory")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+          )}
+
+          <div className="grid grid-cols-1 items-center gap-4 mt-4">
             {/*<Label htmlFor="description" className="text-right">*/}
             {/*  {t("desc")}*/}
             {/*</Label>*/}
@@ -224,30 +250,13 @@ export const MediaAddButton = (props: {
               id="description"
               placeholder="Description"
               value={description}
+              rows={4}
               onChange={(e) => setDescription(e.target.value)}
               className="col-span-1"
               disabled={submitting}
             />
           </div>
 
-          {categories.length > 0 && (
-            <div className="grid grid-cols-1 items-center gap-4 mt-4">
-              <Select value={categoryId} onValueChange={setCategoryId}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t("selectCategory")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           {/* 解压功能 */}
           {/*<div className="flex items-center space-x-2 mt-4">*/}

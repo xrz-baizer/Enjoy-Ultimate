@@ -46,6 +46,9 @@ class AudiosHandler {
     if (!audios) {
       return [];
     }
+    if (!audios) {
+      return [];
+    }
     return audios.map((audio) => audio.toJSON());
   }
 

@@ -47,7 +47,9 @@ export const AudiosComponent = () => {
   const [hasMore, setHasMore] = useState(true);
 
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<string>("all");
+  const [category, setCategory] = useState<string>(
+    localStorage.getItem("audios-category") || "all"
+  );
   const [categories, setCategories] = useState<CategoryType[]>([]);
   const [orderBy, setOrderBy] = useState<string | null>("nameDesc");
   const debouncedQuery = useDebounce(query, 500);
@@ -169,90 +171,74 @@ export const AudiosComponent = () => {
 
   useEffect(() => {
     fetchAudios({ offset: 0 });
+    if (category) {
+      localStorage.setItem("audios-category", category);
+    }
   }, [debouncedQuery, category, orderBy]);
 
   return (
     <>
       <div className="">
-        <div className="flex flex-wrap items-center gap-3 mb-4">
-
+        <div className="flex flex-wrap items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
           <MediaAddButton type="Audio" categories={categories} />
           <CategoryManager />
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Input
+              className="max-w-42"
+              placeholder={t("search")}
+              onChange={(e) => setQuery(e.target.value)}
+          />
           <div className="max-w-42">
             <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="max-w-60">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="all">{t("allCategories")}</SelectItem>
-                {categories.map((category) => (
+              <SelectTrigger className="max-w-60">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="all">{t("allCategories")}</SelectItem>
+                  {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
                     </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
           <div className="max-w-42">
             <Select value={orderBy} onValueChange={setOrderBy}>
-            <SelectTrigger className="max-w-60">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="nameAsc">{t("nameAsc")}</SelectItem>
-                <SelectItem value="nameDesc">{t("nameDesc")}</SelectItem>
-                <SelectItem value="updatedAtDesc">
-                  {t("updatedAtDesc")}
-                </SelectItem>
-                <SelectItem value="createdAtDesc">
-                  {t("createdAtDesc")}
-                </SelectItem>
-                <SelectItem value="createdAtAsc">
-                  {t("createdAtAsc")}
-                </SelectItem>
-                <SelectItem value="recordingsDurationDesc">
-                  {t("recordingsDurationDesc")}
-                </SelectItem>
-                <SelectItem value="recordingsCountDesc">
-                  {t("recordingsCountDesc")}
-                </SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+              <SelectTrigger className="max-w-60">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="nameAsc">{t("nameAsc")}</SelectItem>
+                  <SelectItem value="nameDesc">{t("nameDesc")}</SelectItem>
+                  <SelectItem value="updatedAtDesc">
+                    {t("updatedAtDesc")}
+                  </SelectItem>
+                  <SelectItem value="createdAtDesc">
+                    {t("createdAtDesc")}
+                  </SelectItem>
+                  <SelectItem value="createdAtAsc">
+                    {t("createdAtAsc")}
+                  </SelectItem>
+                  <SelectItem value="recordingsDurationDesc">
+                    {t("recordingsDurationDesc")}
+                  </SelectItem>
+                  <SelectItem value="recordingsCountDesc">
+                    {t("recordingsCountDesc")}
+                  </SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
-          <Input
-            className="max-w-36"
-            placeholder={t("search")}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-
-          {/*<AlertDialog>*/}
-          {/*  <AlertDialogTrigger asChild>*/}
-          {/*    <Button variant="secondary">{t("cleanUp")}</Button>*/}
-          {/*  </AlertDialogTrigger>*/}
-          {/*  <AlertDialogContent>*/}
-          {/*    <AlertDialogTitle>{t("cleanUp")}</AlertDialogTitle>*/}
-          {/*    <AlertDialogDescription>*/}
-          {/*      {t("cleanUpConfirmation")}*/}
-          {/*    </AlertDialogDescription>*/}
-          {/*    <AlertDialogFooter>*/}
-          {/*      <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>*/}
-          {/*      <AlertDialogAction*/}
-          {/*        onClick={() =>*/}
-          {/*          EnjoyApp.audios*/}
-          {/*            .cleanUp()*/}
-          {/*            .then(() => toast.success(t("cleanedUpSuccessfully")))*/}
-          {/*        }*/}
-          {/*      >*/}
-          {/*        {t("confirm")}*/}
-          {/*      </AlertDialogAction>*/}
-          {/*    </AlertDialogFooter>*/}
-          {/*  </AlertDialogContent>*/}
-          {/*</AlertDialog>*/}
         </div>
+        
+      </div>
 
         {audios.length === 0 ? (
           loading ? (
@@ -287,9 +273,9 @@ export const AudiosComponent = () => {
           setEditing(null);
         }}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-1.5xl">
           <DialogHeader>
-            <DialogTitle>{t("editResource")}</DialogTitle>
+            <DialogTitle>{t("EditResource")}</DialogTitle>
             <DialogDescription className="sr-only">
               edit audio
             </DialogDescription>
@@ -298,7 +284,10 @@ export const AudiosComponent = () => {
           <AudioEditForm
             audio={editing}
             onCancel={() => setEditing(null)}
-            onFinish={() => setEditing(null)}
+            onFinish={() => {
+              fetchAudios({ offset: 0 });
+              setEditing(null);
+            }}
           />
         </DialogContent>
       </Dialog>
