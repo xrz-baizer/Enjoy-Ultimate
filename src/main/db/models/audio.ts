@@ -1,24 +1,26 @@
-import {
-  AfterCreate,
-  AfterUpdate,
-  AfterDestroy,
+import { 
+  AfterCreate, 
+  AfterUpdate, 
+  AfterDestroy, 
   BelongsTo,
-  Table,
-  Column,
-  Default,
-  IsUUID,
-  Model,
-  HasMany,
-  HasOne,
-  DataType,
+  Table, 
+  Column, 
+  Default, 
+  IsUUID, 
+  Model, 
+  HasMany, 
+  HasOne, 
+  DataType, 
   Unique,
+  ForeignKey,
 } from "sequelize-typescript";
-import {
-  Recording,
-  Speech,
-  Transcription,
-  UserSetting,
+import { 
+  Recording, 
+  Speech, 
+  Transcription, 
+  UserSetting, 
   Video,
+  Category,
 } from "@main/db/models";
 import settings from "@main/settings";
 import { AudioFormats, MIME_TYPES, VideoFormats } from "@/constants";
@@ -55,7 +57,6 @@ export class Audio extends Model<Audio> {
   @Column(DataType.STRING)
   source: string;
 
-  @Unique
   @Column(DataType.STRING)
   md5: string;
 
@@ -104,6 +105,13 @@ export class Audio extends Model<Audio> {
 
   @Column(DataType.DATE)
   uploadedAt: Date;
+
+  @ForeignKey(() => Category)
+  @Column(DataType.UUID)
+  categoryId: string;
+
+  @BelongsTo(() => Category)
+  category: Category;
 
   @Column(DataType.VIRTUAL)
   get isSynced(): boolean {
@@ -271,7 +279,22 @@ export class Audio extends Model<Audio> {
   }
 
   @AfterUpdate
-  static notifyForUpdate(audio: Audio) {
+  static async notifyForUpdate(audio: Audio) {
+    await audio.reload({
+      include: [
+        {
+          association: "category",
+          model: Category,
+          required: false,
+        },
+        {
+          association: "transcription",
+          model: Transcription,
+          where: { targetType: "Audio" },
+          required: false,
+        },
+      ],
+    });
     this.notify(audio, "update");
     audio.sync().catch(() => {});
   }
@@ -318,6 +341,7 @@ export class Audio extends Model<Audio> {
       source?: string;
       coverUrl?: string;
       compressing?: boolean;
+      categoryId?: string;
     }
   ): Promise<Audio | Video> {
     const { compressing = true } = params || {};
@@ -337,24 +361,6 @@ export class Audio extends Model<Audio> {
     }
 
     const md5 = await hashFile(filePath, { algo: "md5" });
-
-    // check if file already exists
-    const existing = await Audio.findOne({
-      where: {
-        md5,
-      },
-    });
-    if (!!existing) {
-      logger.warn("Audio already exists:", existing.id, existing.name);
-      existing.changed("updatedAt", true);
-      existing.update({ updatedAt: new Date() });
-      return existing;
-    }
-
-    // Generate ID
-    const userId = settings.getSync("user.id");
-    const id = uuidv5(`${userId}/${md5}`, uuidv5.URL);
-    logger.debug("Generated ID:", id);
 
     const destDir = path.join(settings.userDataPath(), "audios");
     const destFile = path.join(
@@ -398,15 +404,16 @@ export class Audio extends Model<Audio> {
       description,
       source,
       coverUrl,
+      categoryId,
     } = params || {};
     const record = this.build({
-      id,
       source,
       md5,
       name,
       description,
       coverUrl,
       metadata,
+      categoryId,
     });
 
     return record.save().catch((err) => {

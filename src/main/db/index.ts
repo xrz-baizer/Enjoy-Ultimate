@@ -20,6 +20,7 @@ import {
   Transcription,
   Video,
   UserSetting,
+  Category,
 } from "./models";
 import {
   audiosHandler,
@@ -39,6 +40,7 @@ import {
   transcriptionsHandler,
   videosHandler,
   userSettingsHandler,
+  categoriesHandler,
 } from "./handlers";
 import os from "os";
 import path from "path";
@@ -78,6 +80,7 @@ const handlers = [
   transcriptionsHandler,
   userSettingsHandler,
   videosHandler,
+  categoriesHandler,
 ];
 
 db.connect = async () => {
@@ -118,6 +121,7 @@ db.connect = async () => {
         Transcription,
         UserSetting,
         Video,
+        Category,
       ],
     });
 
@@ -132,35 +136,44 @@ db.connect = async () => {
         );
       }
 
-      const loadModule: () => Promise<
-        RunnableMigration<unknown>
-      > = async () => {
-        if (os.platform() === "win32") {
-          return import(`file://${filepath}`) as Promise<
-            RunnableMigration<unknown>
-          >;
-        } else {
-          return import(filepath) as Promise<RunnableMigration<unknown>>;
-        }
-      };
-
       const getModule = async () => {
-        return await loadModule();
+        if (os.platform() === "win32") {
+          return (await import(`file://${filepath}`));
+        } else {
+          return (await import(filepath));
+        }
       };
 
       return {
         name,
         path: filepath,
-        up: async () =>
-          (await getModule()).up({ path: filepath, name, context }),
-        down: async () =>
-          (await getModule()).down?.({ path: filepath, name, context }),
+        up: async () => {
+          const mod = await getModule();
+          const up = mod.up || mod.default.up;
+          // The old migration files expect the context to be an object with a context property.
+          // The new migration files expect the context to be the queryInterface itself.
+          try {
+            return await up({ context: context });
+          } catch (e) {
+            return await up(context, Sequelize);
+          }
+        },
+        down: async () => {
+          const mod = await getModule();
+          const down = mod.down || mod.default.down;
+          if (!down) return;
+          try {
+            return await down({ context: context });
+          } catch (e) {
+            return await down(context, Sequelize);
+          }
+        },
       };
     };
 
     const umzug = new Umzug({
       migrations: {
-        glob: ["migrations/*.js", { cwd: __dirname }],
+        glob: ["migrations/*.{js,cjs}", { cwd: __dirname }],
         resolve: migrationResolver,
       },
       context: sequelize.getQueryInterface(),

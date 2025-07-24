@@ -1,5 +1,5 @@
 import { ipcMain, IpcMainEvent } from "electron";
-import { Audio, Transcription } from "@main/db/models";
+import { Audio, Transcription, Category } from "@main/db/models";
 import { FindOptions, WhereOptions, Attributes, Op } from "sequelize";
 import downloader from "@main/downloader";
 import log from "@main/logger";
@@ -30,6 +30,11 @@ class AudiosHandler {
           association: "transcription",
           model: Transcription,
           where: { targetType: "Audio" },
+          required: false,
+        },
+        {
+          association: "category",
+          model: Category,
           required: false,
         },
       ],
@@ -71,6 +76,7 @@ class AudiosHandler {
       coverUrl?: string;
       originalText?: string;
       compressing?: boolean;
+      categoryId?: string;
     } = {}
   ) {
     logger.info("Creating audio...", { uri, params });
@@ -91,10 +97,7 @@ class AudiosHandler {
     try {
       const audio = await Audio.buildFromLocalFile(file, {
         source,
-        name: params.name,
-        description: params.description,
-        coverUrl: params.coverUrl,
-        compressing: params.compressing,
+        ...params,
       });
 
       // create transcription if originalText is provided
@@ -122,21 +125,25 @@ class AudiosHandler {
     id: string,
     params: Attributes<Audio>
   ) {
-    const { name, description, metadata, language, coverUrl, source } = params;
+    const { name, description, metadata, language, coverUrl, source, categoryId } =
+      params;
 
     const audio = await Audio.findByPk(id);
 
     if (!audio) {
       throw new Error(t("models.audio.notFound"));
     }
-    return await audio.update({
+    
+    await audio.update({
       name,
       description,
       metadata,
       language,
       coverUrl,
       source,
+      categoryId,
     });
+    return audio.toJSON();
   }
 
   private async destroy(_event: IpcMainEvent, id: string) {

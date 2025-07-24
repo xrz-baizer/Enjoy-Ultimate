@@ -28,7 +28,8 @@
       "fileNotSupported": "文件不支持 {{file}}",
       "failedToCopyFile": "无法复制文件 {{file}}",
       "failedToDownloadFile": "无法下载文件 {{file}}",
-      "transcriptionFinished": "语音转文本完成"
+      "transcriptionFinished": "语音转文本完成",
+      "category": "分类"
     },
     "video": {
       "name": "名称",
@@ -731,6 +732,7 @@
   "recordingsCountDesc": "录音次数",
   "all": "全部",
   "allLanguages": "全部语言",
+  "allCategories": "全部分类",
   "search": "搜索",
   "noData": "没有数据",
   "selectedFiles": "已选中文件",
@@ -943,5 +945,6 @@
   "checkingForUpdate": "正在检查更新",
   "updateAvailable": "有新版本",
   "quitAndInstall": "退出并安装新版本",
-  "pleaseSelect": "请选择"
+  "pleaseSelect": "请选择",
+  "selectCategory": "选择分类"
 }

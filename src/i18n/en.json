@@ -28,7 +28,8 @@
       "fileNotSupported": "File not supported {{file}}",
       "failedToCopyFile": "Failed to copy file {{file}}",
       "failedToDownloadFile": "Failed to download file {{file}}",
-      "transcriptionFinished": "Transcription finished"
+      "transcriptionFinished": "Transcription finished",
+      "category": "Category"
     },
     "video": {
       "name": "name",
@@ -731,6 +732,7 @@
   "recordingsCountDesc": "Recordings count",
   "all": "All",
   "allLanguages": "All languages",
+  "allCategories": "All categories",
   "search": "Search",
   "noData": "No data",
   "selectedFiles": "Selected files",
@@ -943,5 +945,6 @@
   "checkingForUpdate": "Checking for update",
   "updateAvailable": "Update available",
   "quitAndInstall": "Quit and install",
-  "pleaseSelect": "Please select"
+  "pleaseSelect": "Please select",
+  "selectCategory": "Select category"
 }

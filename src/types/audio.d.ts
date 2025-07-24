@@ -17,6 +17,7 @@ type AudioType = {
   recordingsDuration?: number;
   isUploaded?: boolean;
   uploadedAt?: Date;
+  categoryId?: string;
   createdAt: Date;
   updatedAt: Date;
 };

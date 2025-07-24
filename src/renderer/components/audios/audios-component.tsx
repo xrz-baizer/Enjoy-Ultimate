@@ -1,18 +1,14 @@
 import { useEffect, useState, useReducer, useContext } from "react";
 import {
-  AudioCard,
   MediaAddButton,
   AudiosTable,
   AudioEditForm,
   LoaderSpin,
+  CategoryManager,
 } from "@renderer/components";
 import { t } from "i18next";
 import {
   Button,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
   AlertDialog,
   AlertDialogFooter,
   AlertDialogHeader,
@@ -40,10 +36,8 @@ import {
   DbProviderContext,
   AppSettingsProviderContext,
 } from "@renderer/context";
-import { LayoutGridIcon, LayoutListIcon } from "lucide-react";
 import { audiosReducer } from "@renderer/reducers";
 import { useDebounce } from "@uidotdev/usehooks";
-import { LANGUAGES } from "@/constants";
 
 export const AudiosComponent = () => {
   const { addDblistener, removeDbListener } = useContext(DbProviderContext);
@@ -53,7 +47,8 @@ export const AudiosComponent = () => {
   const [hasMore, setHasMore] = useState(true);
 
   const [query, setQuery] = useState("");
-  const [language, setLanguage] = useState<string | null>("all");
+  const [category, setCategory] = useState<string>("all");
+  const [categories, setCategories] = useState<CategoryType[]>([]);
   const [orderBy, setOrderBy] = useState<string | null>("nameDesc");
   const debouncedQuery = useDebounce(query, 500);
 
@@ -61,27 +56,46 @@ export const AudiosComponent = () => {
   const [deleting, setDeleting] = useState<Partial<AudioType> | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const [tab, setTab] = useState("list");
+  const fetchCategories = async () => {
+    EnjoyApp.categories.findAll().then((_categories) => {
+      setCategories(_categories);
+    });
+  };
+
+  const onDbUpdate = (event: CustomEvent) => {
+    const { record, action, model } = event.detail || {};
+    if (!record) return;
+
+    if (model === "Audio") {
+      if (action === "destroy") {
+        dispatchAudios({ type: "destroy", record });
+      } else if (action === "create") {
+        dispatchAudios({ type: "create", record });
+      } else if (action === "update") {
+        dispatchAudios({ type: "update", record });
+      }
+    } else if (model === "Transcription" && action === "update") {
+      dispatchAudios({
+        type: "update",
+        record: {
+          id: record.targetId,
+          transcribing: record.state === "processing",
+          transcribed: record.state === "finished",
+        },
+      });
+    } else if (model === "Category") {
+      fetchCategories();
+    }
+  };
 
   useEffect(() => {
-    addDblistener(onAudiosUpdate);
+    addDblistener(onDbUpdate);
+    fetchCategories();
 
     return () => {
-      removeDbListener(onAudiosUpdate);
+      removeDbListener(onDbUpdate);
     };
   }, []);
-
-  useEffect(() => {
-    EnjoyApp.cacheObjects.get("audios-page-tab").then((value) => {
-      if (value) {
-        setTab(value);
-      }
-    });
-  }, []);
-
-  useEffect(() => {
-    EnjoyApp.cacheObjects.set("audios-page-tab", tab);
-  }, [tab]);
 
   const fetchAudios = async (options?: { offset: number }) => {
     if (loading) return;
@@ -114,8 +128,8 @@ export const AudiosComponent = () => {
     }
 
     let where = {};
-    if (language != "all") {
-      where = { language };
+    if (category !== "all") {
+      where = { ...where, categoryId: category };
     }
 
     EnjoyApp.audios
@@ -153,146 +167,106 @@ export const AudiosComponent = () => {
       });
   };
 
-  const onAudiosUpdate = (event: CustomEvent) => {
-    const { record, action, model } = event.detail || {};
-    if (!record) return;
-
-    if (model === "Audio") {
-      if (action === "destroy") {
-        dispatchAudios({ type: "destroy", record });
-      } else if (action === "create") {
-        dispatchAudios({ type: "create", record });
-      } else if (action === "update") {
-        dispatchAudios({ type: "update", record });
-      }
-    } else if (model === "Transcription" && action === "update") {
-      dispatchAudios({
-        type: "update",
-        record: {
-          id: record.targetId,
-          transcribing: record.state === "processing",
-          transcribed: record.state === "finished",
-        },
-      });
-    }
-  };
-
   useEffect(() => {
     fetchAudios({ offset: 0 });
-  }, [debouncedQuery, language, orderBy]);
+  }, [debouncedQuery, category, orderBy]);
 
   return (
     <>
       <div className="">
-        <Tabs value={tab} onValueChange={setTab}>
-          <div className="flex flex-wrap items-center gap-4 mb-4">
-            <TabsList>
-              <TabsTrigger value="list">
-                <LayoutListIcon className="h-4 w-4" />
-              </TabsTrigger>
-              <TabsTrigger value="grid">
-                <LayoutGridIcon className="h-4 w-4" />
-              </TabsTrigger>
-            </TabsList>
+        <div className="flex flex-wrap items-center gap-5 mb-4">
 
-            <Select value={orderBy} onValueChange={setOrderBy}>
-              <SelectTrigger className="max-w-60">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="nameAsc">
-                    {t("nameAsc")}
-                  </SelectItem>
-                  <SelectItem value="nameDesc">
-                    {t("nameDesc")}
-                  </SelectItem>
-                  <SelectItem value="updatedAtDesc">
-                    {t("updatedAtDesc")}
-                  </SelectItem>
-                  <SelectItem value="createdAtDesc">
-                    {t("createdAtDesc")}
-                  </SelectItem>
-                  <SelectItem value="createdAtAsc">
-                    {t("createdAtAsc")}
-                  </SelectItem>
-                  <SelectItem value="recordingsDurationDesc">
-                    {t("recordingsDurationDesc")}
-                  </SelectItem>
-                  <SelectItem value="recordingsCountDesc">
-                    {t("recordingsCountDesc")}
-                  </SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+          <MediaAddButton type="Audio" categories={categories} />
+          <CategoryManager />
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger className="max-w-60">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="all">{t("allCategories")}</SelectItem>
+                {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
 
-      
+          <Select value={orderBy} onValueChange={setOrderBy}>
+            <SelectTrigger className="max-w-60">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="nameAsc">{t("nameAsc")}</SelectItem>
+                <SelectItem value="nameDesc">{t("nameDesc")}</SelectItem>
+                <SelectItem value="updatedAtDesc">
+                  {t("updatedAtDesc")}
+                </SelectItem>
+                <SelectItem value="createdAtDesc">
+                  {t("createdAtDesc")}
+                </SelectItem>
+                <SelectItem value="createdAtAsc">
+                  {t("createdAtAsc")}
+                </SelectItem>
+                <SelectItem value="recordingsDurationDesc">
+                  {t("recordingsDurationDesc")}
+                </SelectItem>
+                <SelectItem value="recordingsCountDesc">
+                  {t("recordingsCountDesc")}
+                </SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
 
-            <Input
-              className="max-w-48"
-              placeholder={t("search")}
-              onChange={(e) => setQuery(e.target.value)}
-            />
+          <Input
+            className="max-w-48"
+            placeholder={t("search")}
+            onChange={(e) => setQuery(e.target.value)}
+          />
 
-            <MediaAddButton type="Audio" />
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="secondary">{t("cleanUp")}</Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogTitle>{t("cleanUp")}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {t("cleanUpConfirmation")}
-                </AlertDialogDescription>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() =>
-                      EnjoyApp.audios
-                        .cleanUp()
-                        .then(() => toast.success(t("cleanedUpSuccessfully")))
-                    }
-                  >
-                    {t("confirm")}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
+          {/*<AlertDialog>*/}
+          {/*  <AlertDialogTrigger asChild>*/}
+          {/*    <Button variant="secondary">{t("cleanUp")}</Button>*/}
+          {/*  </AlertDialogTrigger>*/}
+          {/*  <AlertDialogContent>*/}
+          {/*    <AlertDialogTitle>{t("cleanUp")}</AlertDialogTitle>*/}
+          {/*    <AlertDialogDescription>*/}
+          {/*      {t("cleanUpConfirmation")}*/}
+          {/*    </AlertDialogDescription>*/}
+          {/*    <AlertDialogFooter>*/}
+          {/*      <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>*/}
+          {/*      <AlertDialogAction*/}
+          {/*        onClick={() =>*/}
+          {/*          EnjoyApp.audios*/}
+          {/*            .cleanUp()*/}
+          {/*            .then(() => toast.success(t("cleanedUpSuccessfully")))*/}
+          {/*        }*/}
+          {/*      >*/}
+          {/*        {t("confirm")}*/}
+          {/*      </AlertDialogAction>*/}
+          {/*    </AlertDialogFooter>*/}
+          {/*  </AlertDialogContent>*/}
+          {/*</AlertDialog>*/}
+        </div>
 
-          {audios.length === 0 ? (
-            loading ? (
-              <LoaderSpin />
-            ) : (
-              <div className="flex items-center justify-center h-48 border border-dashed rounded-lg">
-                {t("noData")}
-              </div>
-            )
+        {audios.length === 0 ? (
+          loading ? (
+            <LoaderSpin />
           ) : (
-            <>
-              <TabsContent value="grid">
-                <div className="grid gap-4 grid-cols-5">
-                  {audios.map((audio) => (
-                    <AudioCard
-                      audio={audio}
-                      key={audio.id}
-                      onEdit={() => setEditing(audio)}
-                      onDelete={() => setDeleting(audio)}
-                    />
-                  ))}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="list">
-                <AudiosTable
-                  audios={audios}
-                  onEdit={(audio) => setEditing(audio)}
-                  onDelete={(audio) => setDeleting(audio)}
-                />
-              </TabsContent>
-            </>
-          )}
-        </Tabs>
+            <div className="flex items-center justify-center h-48 border border-dashed rounded-lg">
+              {t("noData")}
+            </div>
+          )
+        ) : (
+          <AudiosTable
+            audios={audios}
+            onEdit={(audio) => setEditing(audio)}
+            onDelete={(audio) => setDeleting(audio)}
+          />
+        )}
       </div>
 
       {!loading && hasMore && (

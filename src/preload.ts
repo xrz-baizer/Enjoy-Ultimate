@@ -373,6 +373,23 @@ contextBridge.exposeInMainWorld("__ENJOY_APP__", {
       return ipcRenderer.invoke("audios-clean-up");
     },
   },
+  categories: {
+    findAll: (params?: any) => {
+      return ipcRenderer.invoke("categories-find-all", params);
+    },
+    findOne: (params: any) => {
+      return ipcRenderer.invoke("categories-find-one", params);
+    },
+    create: (params: any) => {
+      return ipcRenderer.invoke("categories-create", params);
+    },
+    update: (id: string, params: any) => {
+      return ipcRenderer.invoke("categories-update", id, params);
+    },
+    destroy: (id: string) => {
+      return ipcRenderer.invoke("categories-destroy", id);
+    },
+  },
   videos: {
     findAll: (params: {
       offset: number | undefined;

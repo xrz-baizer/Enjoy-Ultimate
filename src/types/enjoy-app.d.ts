@@ -450,4 +450,11 @@ type EnjoyAppType = {
     upload: (id: string) => Promise<void>;
     cleanUp: () => Promise<void>;
   };
+  categories: {
+    findAll: (params?: any) => Promise<CategoryType[]>;
+    findOne: (params?: any) => Promise<CategoryType>;
+    create: (params: any) => Promise<CategoryType>;
+    update: (id: string, params: any) => Promise<CategoryType>;
+    destroy: (id: string) => Promise<void>;
+  };
 };

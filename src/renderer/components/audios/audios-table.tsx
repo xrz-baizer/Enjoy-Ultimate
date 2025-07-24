@@ -39,6 +39,9 @@ export const AudiosTable = (props: {
           <TableHead className="capitalize">
             {t("models.audio.duration")}
           </TableHead>
+          <TableHead className="capitalize">
+            {t("models.audio.category")}
+          </TableHead>
           {/* <TableHead className="capitalize">
             {t("models.audio.recordingsCount")}
           </TableHead>
@@ -102,6 +105,7 @@ export const AudiosTable = (props: {
             <TableCell>
               {audio.duration ? secondsToTimestamp(audio.duration) : "-"}
             </TableCell>
+            <TableCell>{audio.category?.name}</TableCell>
             {/* <TableCell>{audio.recordingsCount}</TableCell> */}
             {/* <TableCell>
               {secondsToTimestamp(audio.recordingsDuration / 1000)}

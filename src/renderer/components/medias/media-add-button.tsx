@@ -24,13 +24,26 @@ import {
 } from "@renderer/context";
 import { useNavigate } from "react-router-dom";
 
-export const MediaAddButton = (props: { type?: "Audio" | "Video" }) => {
-  const { type = "Audio" } = props;
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@renderer/components/ui";
+
+export const MediaAddButton = (props: {
+  type?: "Audio" | "Video";
+  categories?: CategoryType[];
+}) => {
+  const { type = "Audio", categories = [] } = props;
   const { EnjoyApp } = useContext(AppSettingsProviderContext);
   const { addDblistener, removeDbListener } = useContext(DbProviderContext);
   const [uri, setUri] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [categoryId, setCategoryId] = useState<string>("");
   const [files, setFiles] = useState<string[]>([]);
   const [compressing, setCompressing] = useState(false);
   const [open, setOpen] = useState(false);
@@ -63,6 +76,7 @@ export const MediaAddButton = (props: { type?: "Audio" | "Video" }) => {
             name,
             description,
             compressing,
+            categoryId,
           })
         )
       )
@@ -103,7 +117,7 @@ export const MediaAddButton = (props: { type?: "Audio" | "Video" }) => {
         });
     } else {
       EnjoyApp[`${type.toLowerCase()}s` as "audios" | "videos"]
-        .create(uri, { name, description, compressing })
+        .create(uri, { name, description, compressing, categoryId })
         .then((media) => {
           toast.success(t("resourceAdded"));
           navigate(`/${type.toLowerCase()}s/${media.id}`);
@@ -215,6 +229,25 @@ export const MediaAddButton = (props: { type?: "Audio" | "Video" }) => {
               disabled={submitting}
             />
           </div>
+
+          {categories.length > 0 && (
+            <div className="grid grid-cols-1 items-center gap-4 mt-4">
+              <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("selectCategory")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* 解压功能 */}
           {/*<div className="flex items-center space-x-2 mt-4">*/}

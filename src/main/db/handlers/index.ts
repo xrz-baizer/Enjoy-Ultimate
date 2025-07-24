@@ -15,3 +15,4 @@ export * from "./transcriptions-handler";
 export * from "./user-settings-handler";
 export * from "./videos-handler";
 export * from "./documents-handler";
+export * from "./categories-handler";
