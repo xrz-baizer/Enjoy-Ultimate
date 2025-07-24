@@ -12,7 +12,7 @@ const config = {
     },
     icon: "./assets/icon",
     name: "Enjoy-Ultimate",
-    executableName: "enjoy-ultimate",
+    executableName: "Enjoy-Ultimate",
     protocols: [
       {
         name: "Enjoy-Ultimate",
@@ -43,7 +43,7 @@ const config = {
       name: "@electron-forge/maker-deb",
       config: () => ({
         options: {
-          name: "enjoy-ultimate",
+          name: "Enjoy-Ultimate",
           productName: "Enjoy-Ultimate",
           icon: "./assets/icon.png",
           mimeType: ["x-scheme-handler/enjoy"],

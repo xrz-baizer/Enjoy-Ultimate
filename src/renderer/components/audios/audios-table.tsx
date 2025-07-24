@@ -24,10 +24,11 @@ import { Link } from "react-router-dom";
 
 export const AudiosTable = (props: {
   audios: Partial<AudioType>[];
+  categories: CategoryType[];
   onEdit: (audio: Partial<AudioType>) => void;
   onDelete: (audio: Partial<AudioType>) => void;
 }) => {
-  const { audios, onEdit, onDelete } = props;
+  const { audios, categories, onEdit, onDelete } = props;
 
   return (
     <Table>
@@ -38,7 +39,10 @@ export const AudiosTable = (props: {
           <TableHead className="capitalize">
             {t("models.audio.category")}
           </TableHead>
-          <TableHead className="capitalize"> {t("models.audio.description")} </TableHead>
+          <TableHead className="capitalize">
+            {" "}
+            {t("models.audio.description")}{" "}
+          </TableHead>
           <TableHead className="capitalize">
             {t("models.audio.duration")}
           </TableHead>
@@ -48,9 +52,9 @@ export const AudiosTable = (props: {
           <TableHead className="capitalize">
             {t("models.audio.recordingsDuration")}
           </TableHead> */}
-          {/*<TableHead className="capitalize">*/}
-          {/*  {t("models.audio.updatedAt")}*/}
-          {/*</TableHead>*/}
+          <TableHead className="capitalize">
+            {t("models.audio.createdAt")}
+          </TableHead>
           {/*<TableHead className="capitalize">*/}
           {/*  {t("models.audio.isTranscribed")}*/}
           {/*</TableHead>*/}
@@ -73,7 +77,7 @@ export const AudiosTable = (props: {
                             className="text-destructive w-4 h-4"
                           />
                         )}
-                        <div className="truncate cursor-pointer max-w-[320px]">
+                        <div className="truncate cursor-pointer max-w-[280px]">
                           {audio.name}
                         </div>
                       </div>
@@ -88,15 +92,19 @@ export const AudiosTable = (props: {
               </TooltipProvider>
             </TableCell>
             <TableCell>
-              <div className="truncate max-w-[100px]">
-                {audio.category?.name}
+              <div className="truncate max-w-[180px]">
+                {
+                  categories.find(
+                    (category) => category.id === audio.categoryId
+                  )?.name
+                }
               </div>
             </TableCell>
             <TableCell>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger>
-                    <div className="truncate max-w-[160px]">
+                    <div className="truncate max-w-[180px]">
                       {audio.description}
                     </div>
                   </TooltipTrigger>
@@ -114,7 +122,7 @@ export const AudiosTable = (props: {
             {/* <TableCell>
               {secondsToTimestamp(audio.recordingsDuration / 1000)}
             </TableCell> */}
-            {/*<TableCell>{formatDateTime(audio.updatedAt)}</TableCell>*/}
+            <TableCell>{formatDateTime(audio.createdAt)}</TableCell>
             {/*<TableCell>*/}
             {/*  {audio.transcribed ? (*/}
             {/*    <CheckCircleIcon className="text-green-500 w-4 h-4" />*/}

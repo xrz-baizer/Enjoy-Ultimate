@@ -265,6 +265,7 @@ export const AudiosComponent = () => {
         ) : (
           <AudiosTable
             audios={audios}
+            categories={categories}
             onEdit={(audio) => setEditing(audio)}
             onDelete={(audio) => setDeleting(audio)}
           />
