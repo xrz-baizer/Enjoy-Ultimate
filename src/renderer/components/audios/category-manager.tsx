@@ -164,7 +164,7 @@ export const CategoryManager = () => {
                   if (e.key === "Escape") setIsAdding(false);
                 }}
               />
-              <Button size="lg" onClick={handleAddCategory}>
+              <Button size="sm" onClick={handleAddCategory}>
                 <CheckIcon className="w-4 h-4" />
               </Button>
               <Button

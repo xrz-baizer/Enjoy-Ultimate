@@ -174,11 +174,12 @@ export const AudiosComponent = () => {
   return (
     <>
       <div className="">
-        <div className="flex flex-wrap items-center gap-5 mb-4">
+        <div className="flex flex-wrap items-center gap-3 mb-4">
 
           <MediaAddButton type="Audio" categories={categories} />
           <CategoryManager />
-          <Select value={category} onValueChange={setCategory}>
+          <div className="max-w-42">
+            <Select value={category} onValueChange={setCategory}>
             <SelectTrigger className="max-w-60">
               <SelectValue />
             </SelectTrigger>
@@ -193,8 +194,9 @@ export const AudiosComponent = () => {
               </SelectGroup>
             </SelectContent>
           </Select>
-
-          <Select value={orderBy} onValueChange={setOrderBy}>
+          </div>
+          <div className="max-w-42">
+            <Select value={orderBy} onValueChange={setOrderBy}>
             <SelectTrigger className="max-w-60">
               <SelectValue />
             </SelectTrigger>
@@ -220,9 +222,9 @@ export const AudiosComponent = () => {
               </SelectGroup>
             </SelectContent>
           </Select>
-
+          </div>
           <Input
-            className="max-w-48"
+            className="max-w-36"
             placeholder={t("search")}
             onChange={(e) => setQuery(e.target.value)}
           />

@@ -35,12 +35,12 @@ export const AudiosTable = (props: {
         <TableRow>
           <TableHead className="capitalize">{t("models.audio.name")}</TableHead>
           {/* <TableHead className="capitalize">{t("language")}</TableHead> */}
+          <TableHead className="capitalize">
+            {t("models.audio.category")}
+          </TableHead>
           <TableHead className="capitalize"> {t("models.audio.description")} </TableHead>
           <TableHead className="capitalize">
             {t("models.audio.duration")}
-          </TableHead>
-          <TableHead className="capitalize">
-            {t("models.audio.category")}
           </TableHead>
           {/* <TableHead className="capitalize">
             {t("models.audio.recordingsCount")}
@@ -73,7 +73,7 @@ export const AudiosTable = (props: {
                             className="text-destructive w-4 h-4"
                           />
                         )}
-                        <div className="truncate cursor-pointer max-w-xs">
+                        <div className="truncate cursor-pointer max-w-[320px]">
                           {audio.name}
                         </div>
                       </div>
@@ -88,10 +88,15 @@ export const AudiosTable = (props: {
               </TooltipProvider>
             </TableCell>
             <TableCell>
+              <div className="truncate max-w-[100px]">
+                {audio.category?.name}
+              </div>
+            </TableCell>
+            <TableCell>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger>
-                    <div className="truncate max-w-xs">
+                    <div className="truncate max-w-[160px]">
                       {audio.description}
                     </div>
                   </TooltipTrigger>
@@ -105,7 +110,6 @@ export const AudiosTable = (props: {
             <TableCell>
               {audio.duration ? secondsToTimestamp(audio.duration) : "-"}
             </TableCell>
-            <TableCell>{audio.category?.name}</TableCell>
             {/* <TableCell>{audio.recordingsCount}</TableCell> */}
             {/* <TableCell>
               {secondsToTimestamp(audio.recordingsDuration / 1000)}
