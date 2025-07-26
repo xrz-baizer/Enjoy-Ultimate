@@ -192,7 +192,7 @@ export const MediaRightPanel = (props: {
 
   return (
     <div className={cn("h-full relative", className)}>
-      <div className="flex-1 font-serif h-full flex flex-col">
+      <div className="flex-1 h-full flex flex-col">
         {layout === "compact" && (
           <div className="px-4">
             <Button

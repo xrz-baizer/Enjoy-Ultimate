@@ -66,7 +66,7 @@ export const MediaCaption = (props: {
           id={`word-${currentSegmentIndex}-${index}`}
         >
           <div
-            className={`font-serif px-1 ${
+            className={`px-1 ${
               onClick && "hover:bg-red-500/10 cursor-pointer"
             } ${index === activeIndex ? "text-red-500" : ""} ${
               selectedIndices.includes(index) ? "bg-red-500/10 selected" : ""
