@@ -159,54 +159,54 @@ export const MediaCaptionActions = (props: {
     <div className="flex items-center space-x-2">
       <Button
         variant={displayIpa ? "secondary" : "outline"}
-        size="icon"
-        className="rounded-full w-8 h-8 p-0"
+        size="lg"
+        className="rounded-full w-10 h-10 p-0"
         data-tooltip-id="media-shadow-tooltip"
         data-tooltip-content={t("displayIpa")}
         data-tooltip-place="top"
         onClick={() => setDisplayIpa(!displayIpa)}
       >
-        <SpeechIcon className="w-4 h-4" />
+        <SpeechIcon className="w-6 h-5" />
       </Button>
 
       <Button
         variant={displayNotes ? "secondary" : "outline"}
-        size="icon"
-        className="rounded-full w-8 h-8 p-0"
+        size="lg"
+        className="rounded-full w-10 h-10 p-0"
         data-tooltip-id="media-shadow-tooltip"
         data-tooltip-content={t("displayNotes")}
         data-tooltip-place="top"
         onClick={() => setDisplayNotes(!displayNotes)}
       >
-        <NotebookPenIcon className="w-4 h-4" />
+        <NotebookPenIcon className="w-6 h-6" />
       </Button>
-      
+
       {/* 文字大小减小按钮 */}
       <Button
         variant="outline"
-        size="icon"
-        className="rounded-full w-8 h-8 p-0"
+        size="lg"
+        className="rounded-full w-10 h-10 p-0"
         data-tooltip-id="media-shadow-tooltip"
         data-tooltip-content={t("decreaseTextSize")}
         data-tooltip-place="top"
         onClick={() => setTextSize(Math.max(0.8, textSize - 0.1))}
         disabled={textSize <= 0.8}
       >
-        <span className="text-xs font-bold">A-</span>
+        <span className="text-sm font-bold">A-</span>
       </Button>
-      
+
       {/* 文字大小增加按钮 */}
       <Button
         variant="outline"
-        size="icon"
-        className="rounded-full w-8 h-8 p-0"
+        size="lg"
+        className="rounded-full w-10 h-10 p-0"
         data-tooltip-id="media-shadow-tooltip"
         data-tooltip-content={t("increaseTextSize")}
         data-tooltip-place="top"
         onClick={() => setTextSize(Math.min(1.5, textSize + 0.1))}
         disabled={textSize >= 1.5}
       >
-        <span className="text-xs font-bold">A+</span>
+        <span className="text-sm font-bold">A+</span>
       </Button>
 
       {/*<ConversationShortcuts*/}
@@ -217,8 +217,8 @@ export const MediaCaptionActions = (props: {
       {/*      data-tooltip-content={t("sendToAIAssistant")}*/}
       {/*      data-tooltip-place="top"*/}
       {/*      variant="outline"*/}
-      {/*      size="sm"*/}
-      {/*      className="p-0 w-8 h-8 rounded-full"*/}
+      {/*      size="lg"*/}
+      {/*      className="p-0 w-10 h-10 rounded-full"*/}
       {/*    >*/}
       {/*      <BotIcon className="w-5 h-5" />*/}
       {/*    </Button>*/}
@@ -227,8 +227,8 @@ export const MediaCaptionActions = (props: {
 
       <Button
         variant="outline"
-        size="icon"
-        className="rounded-full w-8 h-8 p-0"
+        size="lg"
+        className="rounded-full w-10 h-10 p-0"
         data-tooltip-id="media-shadow-tooltip"
         data-tooltip-content={t("copyText")}
         data-tooltip-place="top"
@@ -262,27 +262,27 @@ export const MediaCaptionActions = (props: {
         }}
       >
         {copied ? (
-          <CheckIcon className="w-4 h-4 text-green-500" />
+          <CheckIcon className="w-6 h-5 text-green-500" />
         ) : (
           <CopyIcon
             data-tooltip-id="media-shadow-tooltip"
             data-tooltip-content={t("copyText")}
             data-tooltip-place="top"
-            className="w-4 h-4"
+            className="w-6 h-5"
           />
         )}
       </Button>
 
       <Button
         variant="outline"
-        size="icon"
-        className="rounded-full w-8 h-8 p-0"
+        size="lg"
+        className="rounded-full w-10 h-10 p-0"
         data-tooltip-id="media-shadow-tooltip"
         data-tooltip-content={t("downloadSegment")}
         data-tooltip-place="top"
         onClick={handleDownload}
       >
-        <DownloadIcon className="w-4 h-4" />
+        <DownloadIcon className="w-6 h-5" />
       </Button>
     </div>
   );

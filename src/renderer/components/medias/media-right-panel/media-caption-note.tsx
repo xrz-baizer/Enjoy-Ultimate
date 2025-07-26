@@ -21,7 +21,7 @@ export const MediaCaptionNote = (props: {
   if (!currentSegment) {
     return (
       <div className="py-4 flex justify-center items-center">
-        <Button size="sm" onClick={createSegment}>
+        <Button size="default" onClick={createSegment}>
           {t("startToNote")}
         </Button>
       </div>

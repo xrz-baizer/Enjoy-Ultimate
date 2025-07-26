@@ -26,8 +26,8 @@ export default () => {
 
   return (
     <div className="h-content flex flex-col relative max-w-full">
-      <Breadcrumb className="px-4 pt-3 pb-2">
-        <BreadcrumbList>
+      <Breadcrumb className="px-4 pt-3 pb-3">
+        <BreadcrumbList className="text-lg">
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
               <Link to={`/audios`}>{t("sidebar.audios")}</Link>
