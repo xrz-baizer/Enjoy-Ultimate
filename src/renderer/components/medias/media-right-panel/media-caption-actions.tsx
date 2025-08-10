@@ -50,7 +50,7 @@ export const MediaCaptionActions = (props: {
   // 默认展开设置功能
   const [fbtOpen, setFbtOpen] = useState<boolean>(true);
   // 添加文字大小调节功能
-  const [textSize, setTextSize] = useState<number>(1.16); // 2 = 默认大小
+  const [textSize, setTextSize] = useState<number>(1.38); // 2 = 默认大小
 
   const handleDownload = async () => {
     if (activeRegion && !activeRegion.id.startsWith("segment-region")) {
