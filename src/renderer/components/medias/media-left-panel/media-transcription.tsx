@@ -120,7 +120,11 @@ export const MediaTranscription = (props: { display?: boolean }) => {
   }
 
   return (
-    <div ref={containerRef} data-testid="media-transcription-result">
+    <div
+      key={JSON.stringify(transcription.result)}
+      ref={containerRef}
+      data-testid="media-transcription-result"
+    >
       <div className="px-4 py-0.5 bg-background">
         <div className="flex items-cener justify-between">
           <div className="flex items-center space-x-2">

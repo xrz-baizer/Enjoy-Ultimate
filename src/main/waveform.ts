@@ -26,6 +26,14 @@ export class Waveform {
     fs.writeJsonSync(file, data);
   }
 
+  destroy(id: string) {
+    const file = path.join(this.dir, id + ".waveform.json");
+
+    if (fs.existsSync(file)) {
+      fs.removeSync(file);
+    }
+  }
+
   registerIpcHandlers() {
     ipcMain.handle("waveforms-find", async (_event, id) => {
       return this.find(id);
@@ -33,6 +41,10 @@ export class Waveform {
 
     ipcMain.handle("waveforms-save", (_event, id, data) => {
       return this.save(id, data);
+    });
+
+    ipcMain.handle("waveforms-destroy", (_event, id) => {
+      return this.destroy(id);
     });
   }
 }

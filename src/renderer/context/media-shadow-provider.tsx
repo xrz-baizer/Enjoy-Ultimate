@@ -129,6 +129,7 @@ export const MediaShadowProvider = ({
     null
   );
   const [waveform, setWaveForm] = useState<WaveFormDataType>(null);
+  const [waveformChecked, setWaveformChecked] = useState(false);
   const [wavesurfer, setWavesurfer] = useState(null);
 
   const [regions, setRegions] = useState<Regions | null>(null);
@@ -574,6 +575,7 @@ export const MediaShadowProvider = ({
       wavesurfer.on("error", (err: Error) => {
         toast.error(err?.message || "Error occurred while decoding audio");
         setDecodeError(err?.message || "Error occurred while decoding audio");
+        EnjoyApp.waveforms.destroy(media.md5);
         // Reload page when error occurred after decoding
         if (decoded) {
           window.location.reload();
@@ -648,8 +650,10 @@ export const MediaShadowProvider = ({
   useEffect(() => {
     if (!media) return;
 
+    setWaveformChecked(false);
     EnjoyApp.waveforms.find(media.md5).then((waveform) => {
       setWaveForm(waveform);
+      setWaveformChecked(true);
     });
   }, [media?.md5]);
 
@@ -658,6 +662,8 @@ export const MediaShadowProvider = ({
    * and mediaProvider is available
    */
   useEffect(() => {
+    if (!waveformChecked) return;
+
     initializeWavesurfer();
 
     return () => {
@@ -665,7 +671,7 @@ export const MediaShadowProvider = ({
       setDecoded(false);
       setDecodeError(null);
     };
-  }, [media?.src, waveformContainerRef?.current, mediaProvider]);
+  }, [media?.src, waveformContainerRef?.current, mediaProvider, waveformChecked]);
 
   /* cache last segment index */
   useEffect(() => {

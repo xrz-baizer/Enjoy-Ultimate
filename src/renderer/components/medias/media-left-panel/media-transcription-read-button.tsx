@@ -2,7 +2,16 @@ import {
   AppSettingsProviderContext,
   MediaShadowProviderContext,
 } from "@renderer/context";
-import { useContext, useEffect, useState } from "react";
+import {
+  forwardRef,
+  useContext,
+  useEffect,
+  useState,
+  Children,
+  cloneElement,
+  isValidElement,
+  ReactElement,
+} from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,9 +61,12 @@ import {
 } from "@renderer/components";
 import { LiveAudioVisualizer } from "react-audio-visualize";
 
-export const MediaTranscriptionReadButton = (props: {
-  children: React.ReactNode;
-}) => {
+export const MediaTranscriptionReadButton = forwardRef<
+  HTMLButtonElement,
+  {
+    children?: React.ReactNode;
+  }
+>((props, ref) => {
   const [open, setOpen] = useState(false);
   const { media, transcription, setRecordingType } = useContext(
     MediaShadowProviderContext
@@ -68,53 +80,53 @@ export const MediaTranscriptionReadButton = (props: {
     }
   }, [open]);
 
-  return (
-    <>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          {props.children ? (
-            props.children
-          ) : (
-            <Button variant="outline" size="sm" className="hidden lg:block">
-              {t("readThrough")}
-            </Button>
-          )}
-        </DialogTrigger>
-        <DialogContent
-          onPointerDownOutside={(event) => event.preventDefault()}
-          className="max-w-screen-md xl:max-w-screen-lg h-5/6 flex flex-col p-0"
-        >
-          <DialogTitle className="hidden">{t("readThrough")}</DialogTitle>
-          <ScrollArea className="flex-1 px-6 pt-4">
-            <div className="select-text mx-auto w-full max-w-prose">
-              <h3 className="font-bold text-xl my-4">{media.name}</h3>
-              {open &&
-                transcription.result.timeline.map(
-                  (sentence: TimelineEntry, index: number) => (
-                    <div key={index} className="flex flex-start space-x-2 mb-4">
-                      <span className="text-sm text-muted-foreground min-w-max leading-8">
-                        #{index + 1}
-                      </span>
-                      <MediaCaption
-                        caption={sentence}
-                        currentSegmentIndex={index}
-                        displayIpa={false}
-                        displayNotes={true}
-                      />
-                    </div>
-                  )
-                )}
-            </div>
-            <div className="mt-12">
-              {open && <TranscriptionRecordingsList />}
-            </div>
-          </ScrollArea>
-          <div className="h-16 border-t">{open && <RecorderButton />}</div>
-        </DialogContent>
-      </Dialog>
-    </>
+  const trigger = props.children ? (
+    Children.only(props.children)
+  ) : (
+    <Button ref={ref} variant="outline" size="sm" className="hidden lg:block">
+      {t("readThrough")}
+    </Button>
   );
-};
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {isValidElement(trigger) ? cloneElement(trigger, { ref }) : trigger}
+      </DialogTrigger>
+      <DialogContent
+        onPointerDownOutside={(event) => event.preventDefault()}
+        className="max-w-screen-md xl:max-w-screen-lg h-5/6 flex flex-col p-0"
+      >
+        <DialogTitle className="hidden">{t("readThrough")}</DialogTitle>
+        <ScrollArea className="flex-1 px-6 pt-4">
+          <div className="select-text mx-auto w-full max-w-prose">
+            <h3 className="font-bold text-xl my-4">{media.name}</h3>
+            {open &&
+              transcription.result.timeline.map(
+                (sentence: TimelineEntry, index: number) => (
+                  <div key={index} className="flex flex-start space-x-2 mb-4">
+                    <span className="text-sm text-muted-foreground min-w-max leading-8">
+                      #{index + 1}
+                    </span>
+                    <MediaCaption
+                      caption={sentence}
+                      currentSegmentIndex={index}
+                      displayIpa={false}
+                      displayNotes={true}
+                    />
+                  </div>
+                )
+              )}
+          </div>
+          <div className="mt-12">
+            {open && <TranscriptionRecordingsList />}
+          </div>
+        </ScrollArea>
+        <div className="h-16 border-t">{open && <RecorderButton />}</div>
+      </DialogContent>
+    </Dialog>
+  );
+});
 
 const TranscriptionRecordingsList = () => {
   const [deleting, setDeleting] = useState<RecordingType>(null);

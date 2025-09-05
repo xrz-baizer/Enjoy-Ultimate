@@ -283,7 +283,9 @@ export class Client {
   }
 
   syncAudio(audio: Partial<AudioType>) {
-    return this.api.post("/api/mine/audios", decamelizeKeys(audio));
+    return this.api.post("/api/mine/audios", decamelizeKeys(audio)).catch((err) => {
+      this.logger.warn("Failed to sync audio", err.message);
+    });
   }
 
   deleteAudio(id: string) {

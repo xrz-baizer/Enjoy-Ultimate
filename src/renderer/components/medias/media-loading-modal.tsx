@@ -15,7 +15,7 @@ import {
 } from "@renderer/components/ui";
 import { CircleAlertIcon, LoaderIcon } from "lucide-react";
 import { t } from "i18next";
-import { TranscriptionCreateForm, TranscriptionsList } from "../transcriptions";
+import { TranscriptionCreateForm } from "../transcriptions";
 import { SttEngineOptionEnum } from "@/types/enums";
 
 export const MediaLoadingModal = () => {
@@ -53,11 +53,8 @@ const LoadingContent = () => {
     if (transcription && !transcription.result?.timeline) {
       return (
         <Tabs defaultValue="transcribe">
-          <TabsList className="w-full grid grid-cols-2 mb-4">
+          <TabsList className="w-full grid grid-cols-1 mb-4">
             <TabsTrigger value="transcribe">{t("transcribe")}</TabsTrigger>
-            <TabsTrigger value="download">
-              {t("downloadTranscript")}
-            </TabsTrigger>
           </TabsList>
           <TabsContent value="transcribe">
             <TranscriptionCreateForm
@@ -75,9 +72,6 @@ const LoadingContent = () => {
               transcribingProgress={transcribingProgress}
               transcribingOutput={transcribingOutput}
             />
-          </TabsContent>
-          <TabsContent value="download">
-            <TranscriptionsList media={media} transcription={transcription} />
           </TabsContent>
         </Tabs>
       );

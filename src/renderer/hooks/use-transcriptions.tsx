@@ -58,25 +58,25 @@ export const useTranscriptions = (media: AudioType | VideoType) => {
           };
         }
 
-        const transcriptionOnline = await findTranscriptionOnline();
-        if (transcriptionOnline && !tr?.result?.timeline) {
-          await EnjoyApp.transcriptions.update(tr.id, {
-            state: "finished",
-            result: transcriptionOnline.result,
-            engine: transcriptionOnline.engine,
-            model: transcriptionOnline.model,
-            language: transcriptionOnline.language || media.language,
-          });
-          setTranscription(transcriptionOnline);
-          toast.success(t("downloadedTranscriptionFromCloud"));
-          if (transcribing) {
-            abortGenerateTranscription();
-          }
-          return transcriptionOnline;
-        } else {
-          setTranscription(tr);
-          return tr;
-        }
+        // const transcriptionOnline = await findTranscriptionOnline();
+        // if (transcriptionOnline && !tr?.result?.timeline) {
+        //   await EnjoyApp.transcriptions.update(tr.id, {
+        //     state: "finished",
+        //     result: transcriptionOnline.result,
+        //     engine: transcriptionOnline.engine,
+        //     model: transcriptionOnline.model,
+        //     language: transcriptionOnline.language || media.language,
+        //   });
+        //   setTranscription(transcriptionOnline);
+        //   toast.success(t("downloadedTranscriptionFromCloud"));
+        //   if (transcribing) {
+        //     abortGenerateTranscription();
+        //   }
+        //   return transcriptionOnline;
+        // } else {
+        setTranscription(tr);
+        return tr;
+        // }
       } catch (err) {
         console.error(err);
         return null;
@@ -85,30 +85,30 @@ export const useTranscriptions = (media: AudioType | VideoType) => {
       }
     };
 
-  const findTranscriptionOnline = async () => {
-    if (!media) return;
+  // const findTranscriptionOnline = async () => {
+  //   if (!media) return;
 
-    try {
-      const result = await webApi.transcriptions({
-        targetMd5: media.md5,
-        items: 10,
-      });
-      if (result.transcriptions.length) {
-        for (const tr of result.transcriptions) {
-          if (validateTranscription(tr)) {
-            return tr;
-          } else {
-            console.warn(`Invalid transcription: ${tr.id}`);
-          }
-        }
-      } else {
-        return null;
-      }
-    } catch (err) {
-      console.error(err);
-      return null;
-    }
-  };
+  //   try {
+  //     const result = await webApi.transcriptions({
+  //       targetMd5: media.md5,
+  //       items: 10,
+  //     });
+  //     if (result.transcriptions.length) {
+  //       for (const tr of result.transcriptions) {
+  //         if (validateTranscription(tr)) {
+  //           return tr;
+  //         } else {
+  //           console.warn(`Invalid transcription: ${tr.id}`);
+  //         }
+  //       }
+  //     } else {
+  //       return null;
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     return null;
+  //   }
+  // };
 
   const generateTranscription = async (params?: {
     originalText?: string;

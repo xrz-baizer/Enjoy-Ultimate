@@ -94,7 +94,7 @@ export const MediaLeftPanel = (props: {
             <MediaRecordings />
           </div>
         </TabsContent>
-        <TabsContent value="transcription">
+        <TabsContent forceMount={true} value="transcription">
           <MediaTranscription display={tab === "transcription"} />
         </TabsContent>
         <TabsContent value="info">

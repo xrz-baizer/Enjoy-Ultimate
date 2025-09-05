@@ -16,10 +16,7 @@ import {
   toast,
 } from "@renderer/components/ui";
 import { LoaderIcon } from "lucide-react";
-import {
-  TranscriptionCreateForm,
-  TranscriptionsList,
-} from "@renderer/components";
+import { TranscriptionCreateForm } from "@renderer/components";
 import { SttEngineOptionEnum } from "@/types/enums";
 
 export const MediaTranscriptionGenerateButton = (props: {
@@ -66,12 +63,9 @@ export const MediaTranscriptionGenerateButton = (props: {
         </AlertDialogHeader>
 
         <Tabs defaultValue="transcribe">
-          <TabsList className="w-full grid grid-cols-2 mb-4">
-            <TabsTrigger value="transcribe">{t("transcribe")}</TabsTrigger>
-            <TabsTrigger value="download">
-              {t("downloadTranscript")}
-            </TabsTrigger>
-          </TabsList>
+          {/*<TabsList className="w-full grid grid-cols-1 mb-4">*/}
+          {/*  <TabsTrigger value="transcribe">{t("transcribe")}</TabsTrigger>*/}
+          {/*</TabsList>*/}
           <TabsContent value="transcribe">
             <TranscriptionCreateForm
               onCancel={() => setOpen(false)}
@@ -93,13 +87,6 @@ export const MediaTranscriptionGenerateButton = (props: {
               transcribing={transcribing}
               transcribingProgress={transcribingProgress}
               transcribingOutput={transcribingOutput}
-            />
-          </TabsContent>
-          <TabsContent value="download">
-            <TranscriptionsList
-              media={media}
-              transcription={transcription}
-              onFinish={() => setOpen(false)}
             />
           </TabsContent>
         </Tabs>
