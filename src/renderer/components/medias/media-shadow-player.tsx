@@ -10,11 +10,26 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@renderer/components/ui";
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 
 export const MediaShadowPlayer = () => {
+  const { theme } = useContext(MediaShadowProviderContext);
+
+  useEffect(() => {
+    const className = theme === "green" ? "theme-green" : "";
+    if (className) {
+      document.documentElement.classList.add(className);
+    }
+
+    return () => {
+      if (className) {
+        document.documentElement.classList.remove(className);
+      }
+    };
+  }, [theme]);
+
   return (
-    <>
+    <div className="h-full">
       <ResizablePanelGroup
         autoSaveId="media-shadow-player-layout"
         direction="vertical"
@@ -29,7 +44,7 @@ export const MediaShadowPlayer = () => {
         </ResizablePanel>
       </ResizablePanelGroup>
       <MediaLoadingModal />
-    </>
+    </div>
   );
 };
 
@@ -42,7 +57,13 @@ const TopPanel = () => {
   if (layout === "normal") {
     return (
       <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel id="left-panel" order={0} defaultSize={26} minSize={20}>
+        <ResizablePanel
+          id="left-panel"
+          order={0}
+          defaultSize={26}
+          minSize={20}
+          className="bg-[var(--background-alt)]"
+        >
           <MediaLeftPanel />
         </ResizablePanel>
         <ResizableHandle />

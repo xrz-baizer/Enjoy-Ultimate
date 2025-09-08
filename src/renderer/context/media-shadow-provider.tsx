@@ -104,6 +104,9 @@ type MediaShadowContextType = {
   createSegment: () => Promise<SegmentType | void>;
   getCachedSegmentIndex: () => Promise<number>;
   setCachedSegmentIndex: (index: number) => void;
+  theme: string;
+  setTheme: (theme: string) => void;
+  themes: Record<string, Record<string, string>>;
 };
 
 export const MediaShadowProviderContext =
@@ -123,6 +126,17 @@ export const MediaShadowProvider = ({
     AppSettingsProviderContext
   );
   const navigate = useNavigate();
+
+  const [theme, setTheme] = useState("green");
+  const themes = {
+    default: {},
+    green: {
+      "--player-background": "#d9f4e4",
+      "--player-foreground": "#003716",
+      "--player-button-background": "#04b84c",
+      "--player-button-foreground": "#ffffff",
+    },
+  };
 
   const [media, setMedia] = useState<AudioType | VideoType>(null);
   const [mediaProvider, setMediaProvider] = useState<HTMLAudioElement | null>(
@@ -776,6 +790,9 @@ export const MediaShadowProvider = ({
           createSegment,
           getCachedSegmentIndex,
           setCachedSegmentIndex,
+          theme,
+          setTheme,
+          themes,
         }}
       >
         {children}

@@ -217,7 +217,7 @@ export const MediaRightPanel = (props: {
             onClick={toggleSeletedIndex}
           />
 
-          <div className="px-4 pb-10 min-h-32">
+          <div className="px-4 pb-10 min-h-32 bg-[var(--background-alt)]">
             <MediaCaptionNote
               currentSegmentIndex={currentSegmentIndex}
               selectedIndices={selectedIndices}

@@ -238,7 +238,7 @@ export const MediaWaveform = () => {
   return (
     <div
       ref={ref}
-      className="flex h-full media-player-wrapper border rounded-lg shadow"
+      className="flex h-full media-player-wrapper border rounded-lg bg-[var(--background-alt)]"
     >
       <div
         data-testid="media-player-container"

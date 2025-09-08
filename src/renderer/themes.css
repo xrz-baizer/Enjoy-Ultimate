@@ -1,0 +1,106 @@
+
+/* Green Theme */
+.theme-green {
+  --background: #d9f4e4; /* Main background for right panel */
+  --background-alt: #e9f8ef; /* Lighter background for left panel */
+  --foreground: #003716;
+  --card: #f0fff8; /* Lighter background for cards, popovers, etc. */
+  --card-foreground: #003716;
+  --popover: #f0fff8; /* Lighter background for cards, popovers, etc. */
+  --popover-foreground: #003716;
+  --primary: #04b84c;
+  --primary-foreground: #ffffff;
+  --secondary: #04b84c; /* Use primary color for selected/secondary state */
+  --secondary-foreground: #ffffff;
+  --muted: #e4f9ee;
+  --muted-foreground: #003716;
+  --accent: #04b84c; /* Use primary color for accent state (e.g., selected speed button) */
+  --accent-foreground: #ffffff;
+  --destructive: #ff4d4f;
+  --destructive-foreground: #ffffff;
+  --border: #c8e0d1; /* A light green for borders */
+  --input: #e4f9ee; /* Use muted color for inputs */
+  --ring: #04b84c;
+}
+
+.theme-green {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Override specific component styles */
+.theme-green .bg-secondary,
+.theme-green .bg-accent {
+  background-color: var(--secondary) !important;
+  color: var(--secondary-foreground) !important;
+}
+
+.theme-green nav[aria-label="breadcrumb"] {
+  background-color: var(--background) !important;
+}
+
+.theme-green .bg-muted {
+  background-color: var(--muted) !important;
+}
+
+/* Background for cards, popovers, dialogs etc. */
+.theme-green .bg-card,
+.theme-green .bg-popover,
+.theme-green .bg-background {
+  background-color: var(--card) !important;
+  color: var(--card-foreground) !important;
+}
+
+.theme-green .bg-input,
+.theme-green .bg-input:focus {
+  background-color: var(--input) !important;
+}
+
+.theme-green .btn-outline {
+  background-color: transparent !important;
+  border-color: var(--primary) !important;
+}
+
+.theme-green ::selection {
+  background-color: #ff0054 !important; /* Restore red selection highlight */
+  color: #ffffff !important;
+}
+
+/* Remove all borders */
+.theme-green .border,
+.theme-green .border-t,
+.theme-green .border-b,
+.theme-green .border-l,
+.theme-green .border-r,
+.theme-green [class*="border-"] {
+  border-color: transparent !important;
+}
+
+.theme-green .ring-1,
+.theme-green [class*="ring-"] {
+  box-shadow: none !important;
+}
+
+/* Style for ResizableHandle */
+.theme-green .with-handle[data-panel-group-direction="horizontal"] > .handle::after {
+  background-color: var(--background-alt) !important;
+}
+
+/* Override for specific components */
+.theme-green textarea {
+  background-color: var(--input) !important;
+}
+
+.theme-green .shadow {
+  background-color: var(--foreground) !important;
+  color: var(--primary-foreground) !important;
+  box-shadow: none !important;
+}
+
+.theme-green .btn-ghost {
+  background-color: transparent !important;
+}
+
+.theme-green .btn-ghost:hover {
+  background-color: var(--muted) !important;
+}

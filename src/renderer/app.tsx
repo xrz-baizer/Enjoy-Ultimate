@@ -12,6 +12,7 @@ import { RouterProvider } from "react-router-dom";
 import { Toaster, toast } from "@renderer/components/ui";
 import { Tooltip } from "react-tooltip";
 import { LookupWidget, TranslateWidget } from "./components";
+import "./themes.css";
 import Bugsnag from "@bugsnag/electron";
 import BugsnagPluginReact from "@bugsnag/plugin-react";
 import { Client } from "@/api";

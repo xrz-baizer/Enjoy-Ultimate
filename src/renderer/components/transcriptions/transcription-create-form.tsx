@@ -70,7 +70,7 @@ export const TranscriptionCreateForm = (props: {
       language: learningLanguage,
       service: "upload",
       text: originalText || "",
-      isolate: false,
+      isolate: true,
     },
   });
   const [collapsibleOpen, setCollapsibleOpen] = useState(false);

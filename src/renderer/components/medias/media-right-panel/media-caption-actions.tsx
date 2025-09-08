@@ -15,12 +15,13 @@ import { ConversationShortcuts, MediaCaption } from "@renderer/components";
 import { t } from "i18next";
 import {
   BotIcon,
-  CopyIcon,
   CheckIcon,
-  SpeechIcon,
-  NotebookPenIcon,
+  CopyIcon,
   DownloadIcon,
+  NotebookPenIcon,
+  PaletteIcon,
   PlusIcon,
+  SpeechIcon,
   XIcon,
 } from "lucide-react";
 import {
@@ -39,8 +40,16 @@ export const MediaCaptionActions = (props: {
 }) => {
   const { caption, displayIpa, setDisplayIpa, displayNotes, setDisplayNotes } =
     props;
-  const { media, currentSegment, createSegment, transcription, activeRegion } =
-    useContext(MediaShadowProviderContext);
+  const {
+    media,
+    currentSegment,
+    createSegment,
+    transcription,
+    activeRegion,
+    theme,
+    setTheme,
+    themes,
+  } = useContext(MediaShadowProviderContext);
   const { EnjoyApp, learningLanguage, ipaMappings } = useContext(
     AppSettingsProviderContext
   );
@@ -152,11 +161,40 @@ export const MediaCaptionActions = (props: {
   // 将文字大小应用到全局样式
   useEffect(() => {
     const rootElement = document.documentElement;
-    rootElement.style.setProperty('--caption-text-size', `${textSize}`);
+    rootElement.style.setProperty("--caption-text-size", `${textSize}`);
   }, [textSize]);
 
   return (
     <div className="flex items-center space-x-2">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            size="lg"
+            className="rounded-full w-10 h-10 p-0 bg-[var(--player-button-background)] text-[var(--player-button-foreground)]"
+            data-tooltip-id="media-shadow-tooltip"
+            data-tooltip-content={t("changeTheme")}
+            data-tooltip-place="top"
+          >
+            <PaletteIcon className="w-6 h-5" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-2">
+          <div className="flex items-center space-x-2">
+            {Object.keys(themes).map((themeKey) => (
+              <Button
+                key={themeKey}
+                variant={theme === themeKey ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => setTheme(themeKey)}
+              >
+                {t(themeKey)}
+              </Button>
+            ))}
+          </div>
+        </PopoverContent>
+      </Popover>
+
       <Button
         variant={displayIpa ? "secondary" : "outline"}
         size="lg"
@@ -209,21 +247,21 @@ export const MediaCaptionActions = (props: {
         <span className="text-sm font-bold">A+</span>
       </Button>
 
-      {/*<ConversationShortcuts*/}
-      {/*  prompt={caption.text as string}*/}
-      {/*  trigger={*/}
-      {/*    <Button*/}
-      {/*      data-tooltip-id="media-shadow-tooltip"*/}
-      {/*      data-tooltip-content={t("sendToAIAssistant")}*/}
-      {/*      data-tooltip-place="top"*/}
-      {/*      variant="outline"*/}
-      {/*      size="lg"*/}
-      {/*      className="p-0 w-10 h-10 rounded-full"*/}
-      {/*    >*/}
-      {/*      <BotIcon className="w-5 h-5" />*/}
-      {/*    </Button>*/}
-      {/*  }*/}
-      {/*/>*/}
+      {/*<ConversationShortcuts
+        prompt={caption.text as string}
+        trigger={
+          <Button
+            data-tooltip-id="media-shadow-tooltip"
+            data-tooltip-content={t("sendToAIAssistant")}
+            data-tooltip-place="top"
+            variant="outline"
+            size="lg"
+            className="p-0 w-10 h-10 rounded-full"
+          >
+            <BotIcon className="w-5 h-5" />
+          </Button>
+        }
+      />*/}
 
       <Button
         variant="outline"
@@ -287,3 +325,6 @@ export const MediaCaptionActions = (props: {
     </div>
   );
 };
+
+
+
