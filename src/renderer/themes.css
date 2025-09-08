@@ -8,19 +8,19 @@
   --card-foreground: #003716;
   --popover: #f0fff8; /* Lighter background for cards, popovers, etc. */
   --popover-foreground: #003716;
-  --primary: #04b84c;
+  --primary: #40C575;
   --primary-foreground: #ffffff;
-  --secondary: #04b84c; /* Use primary color for selected/secondary state */
+  --secondary: #40c593; /* Use primary color for selected/secondary state */
   --secondary-foreground: #ffffff;
   --muted: #e4f9ee;
   --muted-foreground: #003716;
-  --accent: #04b84c; /* Use primary color for accent state (e.g., selected speed button) */
+  --accent: #40c593; /* Use primary color for accent state (e.g., selected speed button) */
   --accent-foreground: #ffffff;
   --destructive: #ff4d4f;
   --destructive-foreground: #ffffff;
   --border: #c8e0d1; /* A light green for borders */
   --input: #e4f9ee; /* Use muted color for inputs */
-  --ring: #04b84c;
+  --ring: #40c593;
 }
 
 .theme-green {
@@ -92,7 +92,7 @@
 }
 
 .theme-green .shadow {
-  background-color: var(--foreground) !important;
+  background-color: var(--primary)!important;
   color: var(--primary-foreground) !important;
   box-shadow: none !important;
 }

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, protocol, net } from "electron";
+import { app, BrowserWindow, protocol, net, ipcMain } from "electron";
 import path from "path";
 import fs from "fs-extra";
 import settings from "@main/settings";
@@ -11,6 +11,38 @@ import { t } from "i18next";
 import { Client } from "./api";
 
 const logger = log.scope("main");
+
+// Monkey-patch ipcMain.handle to suppress errors from audiowaveform-generate
+const originalHandle = ipcMain.handle;
+// @ts-expect-error - Overwriting a readonly property
+ipcMain.handle = (
+  channel: string,
+  listener: (event: Electron.IpcMainInvokeEvent, ...args: any[]) => any
+) => {
+  if (channel === "audiowaveform-generate") {
+    const originalListener = listener;
+    const wrappedListener = async (
+      event: Electron.IpcMainInvokeEvent,
+      ...args: any[]
+    ) => {
+      try {
+        // It's crucial to await here in case the original listener is async
+        return await originalListener(event, ...args);
+      } catch (err) {
+        logger.error(
+          `Caught error in audiowaveform-generate, suppressing dialog: ${err}`
+        );
+        // Return a value that won't cause issues on the renderer side
+        return null;
+      }
+    };
+    // Call the original handle method with the wrapped listener
+    return originalHandle.call(ipcMain, channel, wrappedListener);
+  } else {
+    // For all other channels, use the original handle method as is
+    return originalHandle.call(ipcMain, channel, listener);
+  }
+};
 
 const initBugsnag = async () => {
   if (!app.isPackaged) return;
