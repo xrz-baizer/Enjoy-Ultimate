@@ -8,9 +8,9 @@
   --card-foreground: #003716;
   --popover: #f0fff8; /* Lighter background for cards, popovers, etc. */
   --popover-foreground: #003716;
-  --primary: #40C575;
+  --primary: rgba(84, 196, 134, 0.55);
   --primary-foreground: #ffffff;
-  --secondary: #40c593; /* Use primary color for selected/secondary state */
+  --secondary: #4db6ac; /* Use primary color for selected/secondary state */
   --secondary-foreground: #ffffff;
   --muted: #e4f9ee;
   --muted-foreground: #003716;

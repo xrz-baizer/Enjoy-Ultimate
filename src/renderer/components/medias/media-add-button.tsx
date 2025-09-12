@@ -158,6 +158,20 @@ export const MediaAddButton = (props: {
     }
   }, [categories]);
 
+  useEffect(() => {
+    if (!uri) return;
+
+    try {
+      const url = new URL(uri);
+      const filename = url.pathname.split("/").pop();
+      if (filename) {
+        setName(filename);
+      }
+    } catch (e) {
+      // ignore invalid url
+    }
+  }, [uri]);
+
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
       <DialogTrigger asChild>

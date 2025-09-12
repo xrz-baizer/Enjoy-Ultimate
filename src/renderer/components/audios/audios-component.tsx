@@ -5,6 +5,7 @@ import {
   AudioEditForm,
   LoaderSpin,
   CategoryManager,
+  MediaBatchAddButton,
 } from "@renderer/components";
 import { t } from "i18next";
 import {
@@ -182,6 +183,7 @@ export const AudiosComponent = () => {
         <div className="flex flex-wrap items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <MediaAddButton type="Audio" categories={categories} />
+          <MediaBatchAddButton type="Audio" categories={categories} />
           <CategoryManager />
         </div>
 

@@ -381,6 +381,7 @@
   "video": "video",
   "text": "text",
   "addResource": "add resource",
+  "batchAdd": "Batch Add",
   "addResourceFromUrlOrLocal": "add resource from url or local",
   "resourceAdded": "Resource added",
   "resourcesAdded": "{{fulfilled}} resources added, {{rejected}} failed to add. {{reasons}}",

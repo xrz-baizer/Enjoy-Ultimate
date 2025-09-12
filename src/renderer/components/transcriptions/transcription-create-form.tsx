@@ -157,17 +157,17 @@ export const TranscriptionCreateForm = (props: {
           control={form.control}
           name="service"
           render={({ field }) => (
-            <FormItem className="grid w-full items-center">
+            <FormItem className="grid w-full items-center ">
               <FormLabel>{t("sttAiService")}</FormLabel>
               <Select
                 disabled={transcribing}
                 value={field.value}
                 onValueChange={field.onChange}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-secondary">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-muted">
                   <SelectItem value={SttEngineOptionEnum.LOCAL}>
                     {t("local")}
                   </SelectItem>
