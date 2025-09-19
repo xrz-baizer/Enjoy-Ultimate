@@ -95,11 +95,11 @@ export const MediaTranscriptionReadButton = forwardRef<
       </DialogTrigger>
       <DialogContent
         onPointerDownOutside={(event) => event.preventDefault()}
-        className="max-w-screen-md xl:max-w-screen-lg h-5/6 flex flex-col p-0"
+        className="max-w-full h-5/6 flex flex-col p-0"
       >
         <DialogTitle className="hidden">{t("readThrough")}</DialogTitle>
         <ScrollArea className="flex-1 px-6 pt-4">
-          <div className="select-text mx-auto w-full max-w-prose">
+          <div className="select-text mx-auto w-[86%] p-10 theme-green">
             <h3 className="font-bold text-xl my-4">{media.name}</h3>
             {open &&
               transcription.result.timeline.map(
