@@ -40,6 +40,8 @@ type MediaShadowContextType = {
   decodeError: string;
   setDecodeError: (error: string) => void;
   // player state
+  playMode: "loop" | "single" | "all";
+  setPlayMode: (mode: "loop" | "single" | "all") => void;
   currentTime: number;
   currentSegmentIndex: number;
   setCurrentSegmentIndex: (index: number) => void;
@@ -154,6 +156,7 @@ export const MediaShadowProvider = ({
   const [waveformContainerRef, setWaveformContainerRef] = useState(null);
 
   //  Player state
+  const [playMode, setPlayMode] = useState<"loop" | "single" | "all">("single");
   const [decoded, setDecoded] = useState<boolean>(false);
   const [decodeError, setDecodeError] = useState<string>(null);
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -744,6 +747,8 @@ export const MediaShadowProvider = ({
           decoded,
           decodeError,
           setDecodeError,
+          playMode,
+          setPlayMode,
           currentTime,
           currentSegmentIndex,
           setCurrentSegmentIndex,

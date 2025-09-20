@@ -55,10 +55,11 @@ export const MediaPlayerControls = () => {
     setEditingRegion,
     transcriptionDraft,
     setTranscriptionDraft,
+    playMode,
+    setPlayMode,
   } = useContext(MediaShadowProviderContext);
   const { EnjoyApp } = useContext(AppSettingsProviderContext);
   const { currentHotkeys } = useContext(HotKeysSettingsProviderContext);
-  const [playMode, setPlayMode] = useState<"loop" | "single" | "all">("single");
   const [playbackRate, setPlaybackRate] = useState<number>(0.9);
   const [grouping, setGrouping] = useState(false);
   const isLoopPausing = useRef(false);

@@ -57,7 +57,7 @@ export const MediaCaption = (props: {
   }
 
   return (
-    <div className="flex flex-wrap px-4 py-4 bg-muted/50">
+    <div className="flex flex-wrap px-4 pb-4 bg-muted/50">
       {/* use the words splitted by caption text if it is matched with the timeline length, otherwise use the timeline */}
       {words.map((word, index) => (
         <div

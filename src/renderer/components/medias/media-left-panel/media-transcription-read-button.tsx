@@ -10,8 +10,9 @@ import {
   Children,
   cloneElement,
   isValidElement,
-  ReactElement,
+  useRef,
 } from "react";
+import type { ReactElement } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,15 +69,18 @@ export const MediaTranscriptionReadButton = forwardRef<
   }
 >((props, ref) => {
   const [open, setOpen] = useState(false);
-  const { media, transcription, setRecordingType } = useContext(
-    MediaShadowProviderContext
-  );
+  const { media, transcription, setRecordingType, playMode, setPlayMode } =
+    useContext(MediaShadowProviderContext);
+  const originalPlayMode = useRef(playMode);
 
   useEffect(() => {
     if (open) {
       setRecordingType("transcription");
+      originalPlayMode.current = playMode;
+      setPlayMode("all");
     } else {
       setRecordingType("segment");
+      setPlayMode(originalPlayMode.current);
     }
   }, [open]);
 
@@ -104,7 +108,7 @@ export const MediaTranscriptionReadButton = forwardRef<
             {open &&
               transcription.result.timeline.map(
                 (sentence: TimelineEntry, index: number) => (
-                  <div key={index} className="flex flex-start space-x-2 mb-4">
+                  <div key={index} className="flex flex-start space-x-2">
                     <span className="text-sm text-muted-foreground min-w-max leading-8">
                       #{index + 1}
                     </span>
@@ -122,7 +126,9 @@ export const MediaTranscriptionReadButton = forwardRef<
             {open && <TranscriptionRecordingsList />}
           </div>
         </ScrollArea>
-        <div className="h-16 border-t">{open && <RecorderButton />}</div>
+        <div className="h-16 border-t">
+          {open && <ReadThroughControls />}
+        </div>
       </DialogContent>
     </Dialog>
   );
@@ -284,98 +290,65 @@ const TranscriptionRecordingsList = () => {
   );
 };
 
-const RecorderButton = () => {
-  const {
-    isRecording,
-    isPaused,
-    togglePauseResume,
-    startRecording,
-    stopRecording,
-    mediaRecorder,
-    recordingTime,
-  } = useContext(MediaShadowProviderContext);
-  const { EnjoyApp } = useContext(AppSettingsProviderContext);
-  const [access, setAccess] = useState<boolean>(false);
+const PLAYBACK_RATE_OPTIONS = [0.8, 0.9, 1.0];
 
-  const askForMediaAccess = () => {
-    EnjoyApp.system.preferences.mediaAccess("microphone").then((access) => {
-      if (access) {
-        setAccess(true);
-      } else {
-        setAccess(false);
-        // toast.warning(t("noMicrophoneAccess"));
-      }
-    });
+const ReadThroughPlayer = () => {
+  const { wavesurfer } = useContext(MediaShadowProviderContext);
+  const [playbackRate, setPlaybackRate] = useState(1.0);
+
+  const handlePlayPause = async () => {
+    if (!wavesurfer) return;
+    wavesurfer.playPause();
+  };
+
+  const handleSetPlaybackRate = (rate: number) => {
+    setPlaybackRate(rate);
+    if (wavesurfer) {
+      wavesurfer.setPlaybackRate(rate);
+    }
   };
 
   useEffect(() => {
-    askForMediaAccess();
-  }, []);
+    if (!wavesurfer) return;
 
-  if (isRecording) {
-    return (
-      <div className="h-16 flex items-center justify-center px-6">
-        <div className="flex items-center space-x-2">
-          <LiveAudioVisualizer
-            mediaRecorder={mediaRecorder}
-            barWidth={2}
-            gap={2}
-            width={250}
-            height={30}
-            fftSize={512}
-            maxDecibels={-10}
-            minDecibels={-80}
-            smoothingTimeConstant={0.4}
-          />
-          <span className="text-sm text-muted-foreground">
-            {Math.floor(recordingTime / 60)}:
-            {String(recordingTime % 60).padStart(2, "0")}
-          </span>
-          <Button
-            onClick={togglePauseResume}
-            className="rounded-full shadow w-8 h-8"
-            size="icon"
-          >
-            {isPaused ? (
-              <PlayIcon
-                data-tooltip-id="media-shadow-tooltip"
-                data-tooltip-content={t("continue")}
-                fill="white"
-                className="w-4 h-4"
-              />
-            ) : (
-              <PauseIcon
-                data-tooltip-id="media-shadow-tooltip"
-                data-tooltip-content={t("pause")}
-                fill="white"
-                className="w-4 h-4"
-              />
-            )}
-          </Button>
-          <Button
-            data-tooltip-id="media-shadow-tooltip"
-            data-tooltip-content={t("finish")}
-            onClick={stopRecording}
-            className="rounded-full bg-green-500 hover:bg-green-600 shadow w-8 h-8"
-            size="icon"
-          >
-            <CheckIcon className="w-4 h-4 text-white" />
-          </Button>
-        </div>
-      </div>
-    );
-  }
+    wavesurfer.setPlaybackRate(playbackRate);
+  }, [wavesurfer]);
 
   return (
-    <div className="h-16 flex items-center justify-center px-6">
+    <div className="flex items-center justify-center space-x-2">
+      <div className="flex items-center space-x-1">
+        {PLAYBACK_RATE_OPTIONS.map((rate) => (
+          <Button
+            key={rate}
+            variant={playbackRate === rate ? "default" : "ghost"}
+            size="lg"
+            className="h-7 px-4 text-base"
+            onClick={() => handleSetPlaybackRate(rate)}
+          >
+            {rate}x
+          </Button>
+        ))}
+      </div>
+
       <Button
-        disabled={!access}
-        variant="ghost"
-        className="aspect-square p-0 h-12 rounded-full bg-red-500 hover:bg-red-500/90"
-        onClick={() => startRecording()}
+        variant="default"
+        onClick={handlePlayPause}
+        className="aspect-square p-0 h-10 rounded-full"
       >
-        <MicIcon className="w-6 h-6 text-white" />
+        {wavesurfer?.isPlaying() ? (
+          <PauseIcon fill="white" className="w-6 h-6" />
+        ) : (
+          <PlayIcon fill="white" className="w-6 h-6" />
+        )}
       </Button>
+    </div>
+  );
+};
+
+const ReadThroughControls = () => {
+  return (
+    <div className="h-16 flex items-center justify-center px-6">
+      <ReadThroughPlayer />
     </div>
   );
 };
