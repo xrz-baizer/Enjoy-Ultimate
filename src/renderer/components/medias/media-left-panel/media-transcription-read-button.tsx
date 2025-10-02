@@ -31,6 +31,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  Progress,
   ScrollArea,
   Sheet,
   SheetClose,
@@ -41,26 +42,22 @@ import {
 import { TimelineEntry } from "echogarden/dist/utilities/Timeline.d.js";
 import { t } from "i18next";
 import {
-  CheckIcon,
   ChevronDownIcon,
   DownloadIcon,
   GaugeCircleIcon,
-  LoaderIcon,
-  MicIcon,
   MoreHorizontalIcon,
   PauseIcon,
   PlayIcon,
   Trash2Icon,
 } from "lucide-react";
 import { useRecordings } from "@renderer/hooks";
-import { formatDateTime } from "@renderer/lib/utils";
+import { formatDateTime, formatDuration } from "@renderer/lib/utils";
 import {
   LoaderSpin,
   MediaCaption,
   RecordingDetail,
   WavesurferPlayer,
 } from "@renderer/components";
-import { LiveAudioVisualizer } from "react-audio-visualize";
 
 export const MediaTranscriptionReadButton = forwardRef<
   HTMLButtonElement,
@@ -69,9 +66,18 @@ export const MediaTranscriptionReadButton = forwardRef<
   }
 >((props, ref) => {
   const [open, setOpen] = useState(false);
-  const { media, transcription, setRecordingType, playMode, setPlayMode } =
-    useContext(MediaShadowProviderContext);
+  const {
+    media,
+    transcription,
+    setRecordingType,
+    playMode,
+    setPlayMode,
+    wavesurfer,
+  } = useContext(MediaShadowProviderContext);
   const originalPlayMode = useRef(playMode);
+
+  const [activeSentenceIndex, setActiveSentenceIndex] = useState<number>(0);
+  const [activeWordIndex, setActiveWordIndex] = useState<number>(0);
 
   useEffect(() => {
     if (open) {
@@ -83,6 +89,39 @@ export const MediaTranscriptionReadButton = forwardRef<
       setPlayMode(originalPlayMode.current);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!wavesurfer) return;
+
+    const subscriptions = [
+      wavesurfer.on("timeupdate", (currentTime) => {
+        let sentenceIndex = -1;
+        let wordIndex = -1;
+
+        for (let i = 0; i < transcription.result.timeline.length; i++) {
+          const sentence = transcription.result.timeline[i] as TimelineEntry;
+          if (currentTime >= sentence.startTime && currentTime < sentence.endTime) {
+            sentenceIndex = i;
+            for (let j = 0; j < sentence.timeline.length; j++) {
+              const word = sentence.timeline[j];
+              if (currentTime >= word.startTime && currentTime < word.endTime) {
+                wordIndex = j;
+                break;
+              }
+            }
+            break;
+          }
+        }
+
+        setActiveSentenceIndex(sentenceIndex);
+        setActiveWordIndex(wordIndex);
+      }),
+    ];
+
+    return () => {
+      subscriptions.forEach((unsub) => unsub());
+    };
+  }, [wavesurfer, open]);
 
   const trigger = props.children ? (
     Children.only(props.children)
@@ -103,11 +142,11 @@ export const MediaTranscriptionReadButton = forwardRef<
       >
         <DialogTitle className="hidden">{t("readThrough")}</DialogTitle>
         <ScrollArea className="flex-1 px-6 pt-4">
-          <div className="select-text mx-auto w-[86%] p-10 theme-green">
+          <div className="select-text mx-auto w-[93%] p-10 theme-green">
             <h3 className="font-bold text-xl my-4">{media.name}</h3>
             {open &&
-              transcription.result.timeline.map(
-                (sentence: TimelineEntry, index: number) => (
+                transcription.result.timeline.map(
+                    (sentence: TimelineEntry, index: number) => (
                   <div key={index} className="flex flex-start space-x-2">
                     <span className="text-sm text-muted-foreground min-w-max leading-8">
                       #{index + 1}
@@ -115,6 +154,9 @@ export const MediaTranscriptionReadButton = forwardRef<
                     <MediaCaption
                       caption={sentence}
                       currentSegmentIndex={index}
+                      activeIndex={
+                        activeSentenceIndex === index ? activeWordIndex : -1
+                      }
                       displayIpa={false}
                       displayNotes={true}
                     />
@@ -126,7 +168,7 @@ export const MediaTranscriptionReadButton = forwardRef<
             {open && <TranscriptionRecordingsList />}
           </div>
         </ScrollArea>
-        <div className="h-16 border-t">
+        <div className="h-24 border-t">
           {open && <ReadThroughControls />}
         </div>
       </DialogContent>
@@ -295,6 +337,9 @@ const PLAYBACK_RATE_OPTIONS = [0.8, 0.9, 1.0];
 const ReadThroughPlayer = () => {
   const { wavesurfer } = useContext(MediaShadowProviderContext);
   const [playbackRate, setPlaybackRate] = useState(1.0);
+  const [playing, setPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
   const handlePlayPause = async () => {
     if (!wavesurfer) return;
@@ -312,42 +357,78 @@ const ReadThroughPlayer = () => {
     if (!wavesurfer) return;
 
     wavesurfer.setPlaybackRate(playbackRate);
+
+    const subscriptions = [
+      wavesurfer.on("play", () => {
+        setPlaying(true);
+      }),
+      wavesurfer.on("pause", () => {
+        setPlaying(false);
+      }),
+      wavesurfer.on("ready", (duration) => {
+        setDuration(duration);
+      }),
+      wavesurfer.on("timeupdate", (time) => {
+        setCurrentTime(time);
+      }),
+    ];
+
+    setPlaying(wavesurfer.isPlaying());
+    setDuration(wavesurfer.getDuration());
+    setCurrentTime(wavesurfer.getCurrentTime());
+
+    return () => {
+      subscriptions.forEach((unsub) => unsub());
+    };
   }, [wavesurfer]);
 
   return (
-    <div className="flex items-center justify-center space-x-2">
-      <div className="flex items-center space-x-1">
-        {PLAYBACK_RATE_OPTIONS.map((rate) => (
-          <Button
-            key={rate}
-            variant={playbackRate === rate ? "default" : "ghost"}
-            size="lg"
-            className="h-7 px-4 text-base"
-            onClick={() => handleSetPlaybackRate(rate)}
-          >
-            {rate}x
-          </Button>
-        ))}
+    <div className="w-full">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-mono">
+          {formatDuration(currentTime)}
+        </span>
+        <span className="text-sm font-mono">{formatDuration(duration)}</span>
       </div>
+      <Progress
+        value={(currentTime / duration) * 100}
+        className="h-2 bg-gray-200"
+        indicatorClassName="bg-[#40c593]"
+      />
+      <div className="flex items-center justify-center space-x-2 mt-2">
+        <div className="flex items-center space-x-1">
+          {PLAYBACK_RATE_OPTIONS.map((rate) => (
+            <Button
+              key={rate}
+              variant={playbackRate === rate ? "default" : "ghost"}
+              size="lg"
+              className="h-7 px-4 text-base"
+              onClick={() => handleSetPlaybackRate(rate)}
+            >
+              {rate}x
+            </Button>
+          ))}
+        </div>
 
-      <Button
-        variant="default"
-        onClick={handlePlayPause}
-        className="aspect-square p-0 h-10 rounded-full"
-      >
-        {wavesurfer?.isPlaying() ? (
-          <PauseIcon fill="white" className="w-6 h-6" />
-        ) : (
-          <PlayIcon fill="white" className="w-6 h-6" />
-        )}
-      </Button>
+        <Button
+          variant="default"
+          onClick={handlePlayPause}
+          className="aspect-square p-0 h-10 rounded-full"
+        >
+          {playing ? (
+            <PauseIcon fill="white" className="w-6 h-6" />
+          ) : (
+            <PlayIcon fill="white" className="w-6 h-6" />
+          )}
+        </Button>
+      </div>
     </div>
   );
 };
 
 const ReadThroughControls = () => {
   return (
-    <div className="h-16 flex items-center justify-center px-6">
+    <div className="h-full flex items-center justify-center px-6">
       <ReadThroughPlayer />
     </div>
   );
