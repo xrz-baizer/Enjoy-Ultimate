@@ -75,7 +75,6 @@ export const MediaTranscriptionReadButton = forwardRef<
     wavesurfer,
   } = useContext(MediaShadowProviderContext);
   const originalPlayMode = useRef(playMode);
-
   const [activeSentenceIndex, setActiveSentenceIndex] = useState<number>(0);
   const [activeWordIndex, setActiveWordIndex] = useState<number>(0);
 
@@ -92,6 +91,7 @@ export const MediaTranscriptionReadButton = forwardRef<
 
   useEffect(() => {
     if (!wavesurfer) return;
+    if (!transcription?.result) return;
 
     const subscriptions = [
       wavesurfer.on("timeupdate", (currentTime) => {
@@ -121,7 +121,12 @@ export const MediaTranscriptionReadButton = forwardRef<
     return () => {
       subscriptions.forEach((unsub) => unsub());
     };
-  }, [wavesurfer, open]);
+  }, [wavesurfer, open, transcription?.result]);
+
+  // 如果 media 或 transcription 不存在，不渲染按钮
+  if (!media || !transcription?.result) {
+    return null;
+  }
 
   const trigger = props.children ? (
     Children.only(props.children)
@@ -332,7 +337,7 @@ const TranscriptionRecordingsList = () => {
   );
 };
 
-const PLAYBACK_RATE_OPTIONS = [0.8, 0.9, 1.0];
+const PLAYBACK_RATE_OPTIONS = [0.7, 0.8, 0.9, 1.0];
 
 const ReadThroughPlayer = () => {
   const { wavesurfer } = useContext(MediaShadowProviderContext);
@@ -340,6 +345,8 @@ const ReadThroughPlayer = () => {
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const progressRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handlePlayPause = async () => {
     if (!wavesurfer) return;
@@ -352,6 +359,46 @@ const ReadThroughPlayer = () => {
       wavesurfer.setPlaybackRate(rate);
     }
   };
+
+  const seekToPosition = (clientX: number) => {
+    if (!progressRef.current || !wavesurfer || !duration) return;
+
+    const rect = progressRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const percentage = Math.max(0, Math.min(1, x / rect.width));
+    const seekTime = percentage * duration;
+
+    wavesurfer.seekTo(percentage);
+  };
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    seekToPosition(e.clientX);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    seekToPosition(e.clientX);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      seekToPosition(e.clientX);
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging, duration, wavesurfer]);
 
   useEffect(() => {
     if (!wavesurfer) return;
@@ -390,11 +437,18 @@ const ReadThroughPlayer = () => {
         </span>
         <span className="text-sm font-mono">{formatDuration(duration)}</span>
       </div>
-      <Progress
-        value={(currentTime / duration) * 100}
-        className="h-2 bg-gray-200"
-        indicatorClassName="bg-[#40c593]"
-      />
+      <div
+        ref={progressRef}
+        className="cursor-pointer"
+        onClick={handleProgressClick}
+        onMouseDown={handleMouseDown}
+      >
+        <Progress
+          value={(currentTime / duration) * 100}
+          className="h-2 bg-gray-200"
+          indicatorClassName="bg-[#40c593]"
+        />
+      </div>
       <div className="flex items-center justify-center space-x-2 mt-2">
         <div className="flex items-center space-x-1">
           {PLAYBACK_RATE_OPTIONS.map((rate) => (

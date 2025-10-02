@@ -28,6 +28,7 @@ import {
   SaveIcon,
   UndoIcon,
   GroupIcon,
+  BookOpenTextIcon,
 } from "lucide-react";
 import { t } from "i18next";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -35,8 +36,9 @@ import cloneDeep from "lodash/cloneDeep";
 import debounce from "lodash/debounce";
 import { AlignmentResult } from "echogarden/dist/api/API.d.js";
 import { TimelineEntry } from "echogarden/dist/utilities/Timeline.d.js";
+import { MediaTranscriptionReadButton } from "@renderer/components/medias/media-left-panel";
 
-const PLAYBACK_RATE_OPTIONS = [0.8, 0.9, 1.0];
+const PLAYBACK_RATE_OPTIONS = [0.7, 0.8, 0.9, 1.0];
 export const MediaPlayerControls = () => {
   const {
     decoded,
@@ -544,6 +546,18 @@ export const MediaPlayerControls = () => {
   return (
     <div className="w-full h-14 flex items-center justify-center px-6">
       <div className="flex items-center justify-center space-x-2">
+        <MediaTranscriptionReadButton>
+          <Button
+            variant="ghost"
+            size="icon"
+            data-tooltip-id="media-shadow-tooltip"
+            data-tooltip-content={t("readThrough")}
+            className="aspect-square p-0 h-8"
+          >
+            <BookOpenTextIcon className="w-6 h-6" />
+          </Button>
+        </MediaTranscriptionReadButton>
+
         <div className="flex items-center space-x-1">
           {PLAYBACK_RATE_OPTIONS.map((rate) => (
             <Button

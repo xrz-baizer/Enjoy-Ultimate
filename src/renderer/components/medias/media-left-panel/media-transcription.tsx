@@ -25,7 +25,6 @@ import {
 import { AlignmentResult } from "echogarden/dist/api/API.d.js";
 import { formatDuration } from "@renderer/lib/utils";
 import {
-  MediaTranscriptionReadButton,
   MediaTranscriptionGenerateButton,
   MediaTranscriptionPrint,
   TranscriptionEditButton,
@@ -148,13 +147,6 @@ export const MediaTranscription = (props: { display?: boolean }) => {
                 <SquareMenuIcon className="w-5 h-5 text-muted-foreground" />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-36">
-                <DropdownMenuItem asChild>
-                  <MediaTranscriptionReadButton>
-                    <Button variant="ghost" className="block w-full">
-                      {t("readThrough")}
-                    </Button>
-                  </MediaTranscriptionReadButton>
-                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <MediaTranscriptionGenerateButton>
                     <Button
