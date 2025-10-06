@@ -60,68 +60,73 @@ export const MediaCaption = (props: {
     <div className="flex flex-wrap px-4 pb-4 bg-muted/50">
       {/* use the words splitted by caption text if it is matched with the timeline length, otherwise use the timeline */}
       {words.map((word, index) => (
-        <div
-          className=""
-          key={`word-${currentSegmentIndex}-${index}`}
-          id={`word-${currentSegmentIndex}-${index}`}
-        >
+        <>
           <div
-            className={`font-serif px-1 ${
-              onClick && "hover:bg-red-500/10 cursor-pointer"
-            } ${index === activeIndex ? "text-red-500" : ""} ${
-              selectedIndices.includes(index) ? "bg-red-500/10 selected" : ""
-            } ${
-              notedquoteIndices.includes(index)
-                ? "border-b border-red-500 border-dashed"
-                : ""
-            }`}
-            style={{ 
-              fontSize: `calc(1.125rem * var(--caption-text-size, 1))` 
-            }}
-            onClick={() => onClick && onClick(index)}
+            className=""
+            key={`word-${currentSegmentIndex}-${index}`}
+            id={`word-${currentSegmentIndex}-${index}`}
           >
-            {word}
-          </div>
-
-          {displayIpa && (
             <div
-              className={`select-text text-muted-foreground font-code px-1 ${
-                index === 0 ? "before:content-['/']" : ""
+              className={`font-serif px-1 ${
+                onClick && "hover:bg-red-500/10 cursor-pointer"
+              } ${index === activeIndex ? "text-red-500" : ""} ${
+                selectedIndices.includes(index) ? "bg-red-500/10 selected" : ""
               } ${
-                index === caption.timeline.length - 1
-                  ? "after:content-['/']" 
+                notedquoteIndices.includes(index)
+                  ? "border-b border-red-500 border-dashed"
                   : ""
               }`}
-              style={{ 
-                fontSize: `calc(0.875rem * var(--caption-text-size, 1))` 
+              style={{
+                fontSize: `calc(1.125rem * var(--caption-text-size, 1))`
               }}
+              onClick={() => onClick && onClick(index)}
             >
-              {ipas[index]}
+              {word}
             </div>
-          )}
 
-          {displayNotes &&
-            notes
-              .filter((note) => note.parameters.quoteIndices[0] === index)
-              .map((note) => (
-                <div
-                  key={`note-${currentSegmentIndex}-${note.id}`}
-                  className="mb-1 text-red-500 max-w-64 line-clamp-3 font-code cursor-pointer"
-                  style={{ 
-                    fontSize: `calc(0.75rem * var(--caption-text-size, 1))` 
-                  }}
-                  onMouseOver={() =>
-                    setNotedquoteIndices(note.parameters.quoteIndices)
-                  }
-                  onMouseLeave={() => setNotedquoteIndices([])}
-                  onClick={() =>
-                    document.getElementById("note-" + note.id)?.scrollIntoView()
-                  }
-                >
-                  {note.parameters.quoteIndices[0] === index && note.content}
-                </div>
-              ))}
-        </div>
+            {displayIpa && (
+              <div
+                className={`select-text text-muted-foreground font-code px-1 ${
+                  index === 0 ? "before:content-['/']" : ""
+                } ${
+                  index === caption.timeline.length - 1
+                    ? "after:content-['/']"
+                    : ""
+                }`}
+                style={{
+                  fontSize: `calc(0.875rem * var(--caption-text-size, 1))`
+                }}
+              >
+                {ipas[index]}
+              </div>
+            )}
+
+            {displayNotes &&
+              notes
+                .filter((note) => note.parameters.quoteIndices[0] === index)
+                .map((note) => (
+                  <div
+                    key={`note-${currentSegmentIndex}-${note.id}`}
+                    className="mb-1 text-red-500 max-w-64 line-clamp-3 font-code cursor-pointer"
+                    style={{
+                      fontSize: `calc(0.75rem * var(--caption-text-size, 1))`
+                    }}
+                    onMouseOver={() =>
+                      setNotedquoteIndices(note.parameters.quoteIndices)
+                    }
+                    onMouseLeave={() => setNotedquoteIndices([])}
+                    onClick={() =>
+                      document.getElementById("note-" + note.id)?.scrollIntoView()
+                    }
+                  >
+                    {note.parameters.quoteIndices[0] === index && note.content}
+                  </div>
+                ))}
+          </div>
+          {word.endsWith(",") && (
+            <div key={`break-${currentSegmentIndex}-${index}`} className="basis-full h-0" />
+          )}
+        </>
       ))}
     </div>
   );
