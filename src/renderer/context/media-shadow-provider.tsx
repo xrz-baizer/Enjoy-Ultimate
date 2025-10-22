@@ -39,6 +39,7 @@ type MediaShadowContextType = {
   decoded: boolean;
   decodeError: string;
   setDecodeError: (error: string) => void;
+  transcoding: boolean;
   // player state
   playMode: "loop" | "single" | "all";
   setPlayMode: (mode: "loop" | "single" | "all") => void;
@@ -159,6 +160,7 @@ export const MediaShadowProvider = ({
   const [playMode, setPlayMode] = useState<"loop" | "single" | "all">("single");
   const [decoded, setDecoded] = useState<boolean>(false);
   const [decodeError, setDecodeError] = useState<string>(null);
+  const [transcoding, setTranscoding] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState<number>(0);
   const [fitZoomRatio, setFitZoomRatio] = useState<number>(1.0);
@@ -589,7 +591,31 @@ export const MediaShadowProvider = ({
       wavesurfer.on("ready", () => {
         setDecoded(true);
       }),
-      wavesurfer.on("error", (err: Error) => {
+      wavesurfer.on("error", async (err: Error) => {
+        // If decode fails and media is not already transcoded, try transcoding to WAV
+        if (!media.src.endsWith(".wav") && !transcoding) {
+          setTranscoding(true);
+          try {
+            const transcodedSrc = await EnjoyApp.ffmpeg.transcode(media.src);
+            setTranscoding(false);
+            // Update media src to use transcoded file
+            setMedia({ ...media, src: transcodedSrc });
+            // Clear error and retry
+            setDecodeError(null);
+            return;
+          } catch (transcodeErr) {
+            setTranscoding(false);
+            toast.error(
+              `${t("failedToDecodeWaveform")}: ${transcodeErr.message}`
+            );
+            setDecodeError(
+              err?.message || "Error occurred while decoding audio"
+            );
+            EnjoyApp.waveforms.destroy(media.md5);
+            return;
+          }
+        }
+
         toast.error(err?.message || "Error occurred while decoding audio");
         setDecodeError(err?.message || "Error occurred while decoding audio");
         EnjoyApp.waveforms.destroy(media.md5);
@@ -687,6 +713,7 @@ export const MediaShadowProvider = ({
       if (wavesurfer) wavesurfer.destroy();
       setDecoded(false);
       setDecodeError(null);
+      setTranscoding(false);
     };
   }, [media?.src, waveformContainerRef?.current, mediaProvider, waveformChecked]);
 
@@ -747,6 +774,7 @@ export const MediaShadowProvider = ({
           decoded,
           decodeError,
           setDecodeError,
+          transcoding,
           playMode,
           setPlayMode,
           currentTime,

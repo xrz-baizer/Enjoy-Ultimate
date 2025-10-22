@@ -130,9 +130,15 @@ export class Document extends Model<Document> {
   async sync(): Promise<void> {
     if (this.isSynced) return;
 
+    const accessToken = await UserSetting.accessToken();
+    if (!accessToken) {
+      logger.debug("Skipping sync: no access token");
+      return;
+    }
+
     const webApi = new Client({
       baseUrl: settings.apiUrl(),
-      accessToken: (await UserSetting.accessToken()) as string,
+      accessToken: accessToken as string,
       logger,
     });
 
@@ -144,6 +150,12 @@ export class Document extends Model<Document> {
 
   async upload(force: boolean = false): Promise<void> {
     if (this.isUploaded && !force) return;
+
+    const accessToken = await UserSetting.accessToken();
+    if (!accessToken) {
+      logger.debug("Skipping upload: no access token");
+      return;
+    }
 
     return storage
       .put(this.md5, this.filePath, this.metadata.mimeType)

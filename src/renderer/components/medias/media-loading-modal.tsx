@@ -41,6 +41,7 @@ const LoadingContent = () => {
     media,
     decoded,
     decodeError,
+    transcoding,
     transcription,
     transcribing,
     transcribingProgress,
@@ -82,6 +83,21 @@ const LoadingContent = () => {
         </div>
       );
     }
+    // Transcoding in progress
+  } else if (transcoding) {
+    return (
+      <>
+        <div className="mb-4 flex items-center space-x-4">
+          <LoaderIcon className="w-4 h-4 animate-spin" />
+          <span>{t("transcodingAudio")}</span>
+        </div>
+        <AlertDialogFooter>
+          <Button variant="secondary" onClick={onCancel}>
+            {t("cancel")}
+          </Button>
+        </AlertDialogFooter>
+      </>
+    );
     // Decode error
   } else if (decodeError) {
     return (

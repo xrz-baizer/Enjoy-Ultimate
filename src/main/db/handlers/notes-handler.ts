@@ -74,7 +74,7 @@ class NotesHandler {
       limit: limit,
       offset: offset,
       include: [Segment],
-      order: [["createdAt", "DESC"]],
+      order: [["createdAt", "ASC"]],
     });
 
     return notes.map((note) => note.toJSON());

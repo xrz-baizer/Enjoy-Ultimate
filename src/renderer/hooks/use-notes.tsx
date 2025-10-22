@@ -73,7 +73,7 @@ export const useNotes = (props: { targetId: string; targetType: string }) => {
     } else if (action === "create") {
       if (record.targetId === targetId && record.targetType === targetType) {
         setNotes((notes) => {
-          return [record, ...notes];
+          return [...notes, record];
         });
       }
     }

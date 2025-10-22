@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, Fragment } from "react";
 import {
   AppSettingsProviderContext,
   MediaShadowProviderContext,
@@ -60,10 +60,9 @@ export const MediaCaption = (props: {
     <div className="flex flex-wrap px-4 pb-4 bg-muted/50">
       {/* use the words splitted by caption text if it is matched with the timeline length, otherwise use the timeline */}
       {words.map((word, index) => (
-        <>
+        <Fragment key={`word-${currentSegmentIndex}-${index}`}>
           <div
             className=""
-            key={`word-${currentSegmentIndex}-${index}`}
             id={`word-${currentSegmentIndex}-${index}`}
           >
             <div
@@ -124,9 +123,9 @@ export const MediaCaption = (props: {
                 ))}
           </div>
           {word.endsWith(",") && (
-            <div key={`break-${currentSegmentIndex}-${index}`} className="basis-full h-0" />
+            <div className="basis-full h-0" />
           )}
-        </>
+        </Fragment>
       ))}
     </div>
   );

@@ -91,7 +91,7 @@ export const MediaTranscriptionReadButton = forwardRef<
 
   useEffect(() => {
     if (!wavesurfer) return;
-    if (!transcription?.result) return;
+    if (!transcription?.result?.timeline) return;
 
     const subscriptions = [
       wavesurfer.on("timeupdate", (currentTime) => {
@@ -124,7 +124,7 @@ export const MediaTranscriptionReadButton = forwardRef<
   }, [wavesurfer, open, transcription?.result]);
 
   // 如果 media 或 transcription 不存在，不渲染按钮
-  if (!media || !transcription?.result) {
+  if (!media || !transcription?.result?.timeline) {
     return null;
   }
 
@@ -163,7 +163,7 @@ export const MediaTranscriptionReadButton = forwardRef<
                         activeSentenceIndex === index ? activeWordIndex : -1
                       }
                       displayIpa={false}
-                      displayNotes={true}
+                      displayNotes={false}
                     />
                   </div>
                 )

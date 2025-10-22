@@ -87,9 +87,15 @@ export class Transcription extends Model<Transcription> {
     if (this.isSynced) return;
     if (this.getDataValue("state") !== "finished") return;
 
+    const accessToken = await UserSetting.accessToken();
+    if (!accessToken) {
+      logger.debug("Skipping sync: no access token");
+      return;
+    }
+
     const webApi = new Client({
       baseUrl: settings.apiUrl(),
-      accessToken: (await UserSetting.accessToken()) as string,
+      accessToken: accessToken as string,
       logger,
     });
     return webApi.syncTranscription(this.toJSON()).then(() => {

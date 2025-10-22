@@ -219,6 +219,12 @@ export class Audio extends Model<Audio> {
   async upload(force: boolean = false) {
     if (this.isUploaded && !force) return;
 
+    const accessToken = await UserSetting.accessToken();
+    if (!accessToken) {
+      logger.debug("Skipping upload: no access token");
+      return;
+    }
+
     return storage
       .put(this.md5, this.filePath, this.mimeType)
       .then((result) => {
@@ -238,9 +244,15 @@ export class Audio extends Model<Audio> {
   async sync() {
     if (this.isSynced) return;
 
+    const accessToken = await UserSetting.accessToken();
+    if (!accessToken) {
+      logger.debug("Skipping sync: no access token");
+      return;
+    }
+
     const webApi = new Client({
       baseUrl: settings.apiUrl(),
-      accessToken: (await UserSetting.accessToken()) as string,
+      accessToken: accessToken as string,
       logger: log.scope("audio/sync"),
     });
 

@@ -19,6 +19,8 @@ import { Client } from "@/api";
 import settings from "@main/settings";
 import log from "@main/logger";
 
+const logger = log.scope("db/models/pronunciation-assessment");
+
 @Table({
   modelName: "PronunciationAssessment",
   tableName: "pronunciation_assessments",
@@ -100,9 +102,15 @@ export class PronunciationAssessment extends Model<PronunciationAssessment> {
   }
 
   async sync() {
+    const accessToken = await UserSetting.accessToken();
+    if (!accessToken) {
+      logger.debug("Skipping sync: no access token");
+      return;
+    }
+
     const webApi = new Client({
       baseUrl: settings.apiUrl(),
-      accessToken: (await UserSetting.accessToken()) as string,
+      accessToken: accessToken as string,
       logger: log.scope("api/client"),
     });
 

@@ -4,6 +4,7 @@ import {
   VideosTable,
   VideoEditForm,
   MediaAddButton,
+  MediaBatchDeleteButton,
   LoaderSpin,
 } from "@renderer/components";
 import { t } from "i18next";
@@ -227,6 +228,7 @@ export const VideosComponent = () => {
               onChange={(e) => setQuery(e.target.value)}
             />
             <MediaAddButton type="Video" />
+            <MediaBatchDeleteButton type="Video" items={videos} />
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="secondary">{t("cleanUp")}</Button>

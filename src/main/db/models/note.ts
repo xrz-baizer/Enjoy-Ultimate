@@ -59,9 +59,15 @@ export class Note extends Model<Note> {
   async sync(): Promise<void> {
     if (this.isSynced) return;
 
+    const accessToken = await UserSetting.accessToken();
+    if (!accessToken) {
+      logger.debug("Skipping sync: no access token");
+      return;
+    }
+
     const webApi = new Client({
       baseUrl: settings.apiUrl(),
-      accessToken: (await UserSetting.accessToken()) as string,
+      accessToken: accessToken as string,
       logger,
     });
 

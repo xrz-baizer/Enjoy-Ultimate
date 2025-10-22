@@ -46,6 +46,11 @@ export function hashBlob(
  * @returns {string} file path
  */
 export function enjoyUrlToPath(enjoyUrl: string): string {
+  // Handle null, undefined, or non-string values
+  if (!enjoyUrl || typeof enjoyUrl !== "string") {
+    return enjoyUrl;
+  }
+
   let filePath = enjoyUrl;
 
   if (

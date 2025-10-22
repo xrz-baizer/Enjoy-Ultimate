@@ -7,9 +7,7 @@ import {
   DialogTitle,
   DialogFooter,
   Button,
-  Progress,
   toast,
-  Label,
 } from "@renderer/components/ui";
 import { PlusCircleIcon, LoaderIcon } from "lucide-react";
 import { t } from "i18next";
@@ -17,9 +15,7 @@ import { useState, useContext, useEffect } from "react";
 import { AudioFormats, VideoFormats } from "@/constants";
 import {
   AppSettingsProviderContext,
-  DbProviderContext,
 } from "@renderer/context";
-import { useNavigate } from "react-router-dom";
 
 import {
   Select,
@@ -29,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@renderer/components/ui";
-import { useTranscribe } from "@renderer/hooks";
 
 export const MediaBatchAddButton = (props: {
   type?: "Audio" | "Video";
@@ -37,18 +32,10 @@ export const MediaBatchAddButton = (props: {
 }) => {
   const { type = "Audio", categories = [] } = props;
   const { EnjoyApp } = useContext(AppSettingsProviderContext);
-  const { addDblistener, removeDbListener } = useContext(DbProviderContext);
   const [categoryId, setCategoryId] = useState<string>("");
   const [files, setFiles] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [createdCount, setCreatedCount] = useState(0);
-  const [transcribing, setTranscribing] = useState(false);
-  const [transcribedCount, setTranscribedCount] = useState(0);
-  const { transcribe } = useTranscribe();
-  const [medias, setMedias] = useState<AudioType[] | VideoType[]>([]);
-
-  const navigate = useNavigate();
 
   const handleOpen = (value: boolean) => {
     if (submitting) {
@@ -62,10 +49,6 @@ export const MediaBatchAddButton = (props: {
     if (files.length === 0) return;
     if (!categoryId) {
       toast.error(t("selectCategory"));
-      return;
-    }
-    if (files.length > 50) {
-      toast.error(t("resourcesAddInBatchLimitError", { limit: 50 }));
       return;
     }
 
@@ -100,7 +83,6 @@ export const MediaBatchAddButton = (props: {
       return;
     }
 
-    setMedias(fulfilled);
     toast.success(
       t("resourcesAdded", {
         fulfilled: fulfilled.length,
@@ -109,18 +91,6 @@ export const MediaBatchAddButton = (props: {
     );
 
     setSubmitting(false);
-    setTranscribing(true);
-
-    for (const media of fulfilled) {
-      try {
-        await transcribe(media);
-        setTranscribedCount((count) => count + 1);
-      } catch (e) {
-        toast.error(e.message);
-      }
-    }
-
-    setTranscribing(false);
     setOpen(false);
   };
 
@@ -196,37 +166,12 @@ export const MediaBatchAddButton = (props: {
               {t("selectedFiles")}: {files.length}
             </div>
           )}
-
-          {submitting && (
-            <div className="flex items-center gap-2 mt-4">
-              <Progress
-                value={(createdCount * 100.0) / files.length}
-                max={100}
-              />
-              <span>
-                {createdCount}/{files.length}
-              </span>
-            </div>
-          )}
-
-          {transcribing && (
-            <div className="flex items-center gap-2 mt-4">
-              <Label>{t("transcribing")}</Label>
-              <Progress
-                value={(transcribedCount * 100.0) / medias.length}
-                max={100}
-              />
-              <span>
-                {transcribedCount}/{medias.length}
-              </span>
-            </div>
-          )}
         </div>
 
         <DialogFooter>
           <Button
             variant="ghost"
-            disabled={submitting || transcribing}
+            disabled={submitting}
             onClick={() => {
               setOpen(false);
             }}
@@ -235,10 +180,10 @@ export const MediaBatchAddButton = (props: {
           </Button>
           <Button
             variant="default"
-            disabled={files.length === 0 || submitting || transcribing}
+            disabled={files.length === 0 || submitting}
             onClick={handleSubmit}
           >
-            {(submitting || transcribing) && (
+            {submitting && (
               <LoaderIcon className="animate-spin w-4 mr-2" />
             )}
             {t("confirm")}
