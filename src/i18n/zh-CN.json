@@ -667,6 +667,9 @@
     "analysis": "句子分析",
     "note": "笔记"
   },
+  "showNotes": "显示笔记",
+  "hideNotes": "隐藏笔记",
+  "sentenceNote": "句子笔记",
   "translateSentence": "整句翻译",
   "reTranslate": "重新翻译",
   "analyzeSentence": "分析句子",

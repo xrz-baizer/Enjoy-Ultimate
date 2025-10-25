@@ -667,6 +667,9 @@
     "analysis": "Analysis",
     "note": "Note"
   },
+  "showNotes": "Show Notes",
+  "hideNotes": "Hide Notes",
+  "sentenceNote": "Sentence Note",
   "translateSentence": "translate sentenece",
   "reTranslate": "re-translate",
   "analyzeSentence": "analyze sentenece",

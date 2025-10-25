@@ -5,6 +5,7 @@ import {
 } from "@renderer/context";
 import { convertWordIpaToNormal } from "@/utils";
 import { TimelineEntry } from "echogarden/dist/utilities/Timeline.d.js";
+import { t } from "i18next";
 
 export const MediaCaption = (props: {
   caption: TimelineEntry;
@@ -14,13 +15,18 @@ export const MediaCaption = (props: {
   activeIndex?: number;
   displayIpa?: boolean;
   displayNotes?: boolean;
+  notes?: NoteType[];
   onClick?: (index: number) => void;
 }) => {
   const { currentNotes } = useContext(MediaShadowProviderContext);
   const { learningLanguage, ipaMappings } = useContext(
     AppSettingsProviderContext
   );
-  const notes = currentNotes.filter((note) => note.parameters?.quoteIndices);
+  const allNotes = (props.notes || currentNotes);
+  // Separate notes into word-level and sentence-level
+  const wordLevelNotes = allNotes.filter((note) => note.parameters?.quoteIndices && note.parameters.quoteIndices.length > 0);
+  const sentenceLevelNotes = allNotes.filter((note) => !note.parameters?.quoteIndices || note.parameters.quoteIndices.length === 0);
+
   const {
     caption,
     selectedIndices = [],
@@ -34,13 +40,6 @@ export const MediaCaption = (props: {
 
   const [notedquoteIndices, setNotedquoteIndices] = useState<number[]>([]);
 
-  let words = caption.text
-    .replace(/ ([.,!?:;])/g, "$1")
-    .replace(/ (['"")])/g, "$1")
-    .replace(/ \.\.\./g, "...")
-    .split(/([—]|\s+)/g)
-    .filter((word) => word.trim() !== "" && word !== "—");
-
   const ipas = caption.timeline.map((w) =>
     w.timeline?.map((t) =>
       t.timeline && language.startsWith("en")
@@ -52,8 +51,42 @@ export const MediaCaption = (props: {
     )
   );
 
-  if (words.length !== caption.timeline.length) {
-    words = caption.timeline.map((w) => w.text);
+  // Build words array from timeline, preserving punctuation from original text
+  // This approach sequentially matches words in the text to handle duplicates correctly
+  const words: string[] = [];
+  let searchStartPos = 0;
+
+  for (const timelineWord of caption.timeline) {
+    const word = timelineWord.text;
+    // Find the word in the remaining text (case-insensitive)
+    const searchText = caption.text.slice(searchStartPos);
+    const wordIndex = searchText.toLowerCase().indexOf(word.toLowerCase());
+
+    if (wordIndex !== -1) {
+      const actualStartPos = searchStartPos + wordIndex;
+      const actualEndPos = actualStartPos + word.length;
+
+      // Extract the actual word from original text (preserves original case)
+      let wordWithPunct = caption.text.slice(actualStartPos, actualEndPos);
+
+      // Check for punctuation immediately after the word
+      // Include hyphens, en-dashes, and em-dashes that connect words
+      const afterText = caption.text.slice(actualEndPos);
+      const punctMatch = afterText.match(/^([.,!?:;'""\u2019\u2018\-\u2013\u2014]+)/);
+
+      let nextSearchPos = actualEndPos;
+      if (punctMatch) {
+        wordWithPunct += punctMatch[1];
+        // Move search position past the punctuation
+        nextSearchPos = actualEndPos + punctMatch[1].length;
+      }
+
+      words.push(wordWithPunct);
+      searchStartPos = nextSearchPos;
+    } else {
+      // Fallback: use the word as-is if not found
+      words.push(word);
+    }
   }
 
   return (
@@ -101,7 +134,7 @@ export const MediaCaption = (props: {
             )}
 
             {displayNotes &&
-              notes
+              wordLevelNotes
                 .filter((note) => note.parameters.quoteIndices[0] === index)
                 .map((note) => (
                   <div
@@ -127,6 +160,26 @@ export const MediaCaption = (props: {
           )}
         </Fragment>
       ))}
+
+      {/* Display sentence-level notes at the end */}
+      {displayNotes && sentenceLevelNotes.length > 0 && (
+        <div className="w-full mt-2 px-1">
+          {sentenceLevelNotes.map((note) => (
+            <div
+              key={`sentence-note-${currentSegmentIndex}-${note.id}`}
+              className="mb-2 p-2 text-green-700 bg-green-500/10 rounded border-l-2 border-green-500 font-code cursor-pointer"
+              style={{
+                fontSize: `calc(0.875rem * var(--caption-text-size, 1))`
+              }}
+              onClick={() =>
+                document.getElementById("note-" + note.id)?.scrollIntoView()
+              }
+            >
+              <div className="line-clamp-3">{note.content}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

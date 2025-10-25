@@ -48,6 +48,7 @@ import {
   MoreHorizontalIcon,
   PauseIcon,
   PlayIcon,
+  StickyNoteIcon,
   Trash2Icon,
 } from "lucide-react";
 import { useRecordings } from "@renderer/hooks";
@@ -65,7 +66,10 @@ export const MediaTranscriptionReadButton = forwardRef<
     children?: React.ReactNode;
   }
 >((props, ref) => {
+  const { EnjoyApp } = useContext(AppSettingsProviderContext);
   const [open, setOpen] = useState(false);
+  const [notesVisible, setNotesVisible] = useState(true);
+  const [allNotes, setAllNotes] = useState<Record<number, NoteType[]>>({});
   const {
     media,
     transcription,
@@ -83,11 +87,49 @@ export const MediaTranscriptionReadButton = forwardRef<
       setRecordingType("transcription");
       originalPlayMode.current = playMode;
       setPlayMode("all");
+      // Load all segments and their notes
+      if (media && transcription?.result?.timeline) {
+        const loadAllNotes = async () => {
+          const notesMap: Record<number, NoteType[]> = {};
+
+          // Load segments for each sentence index
+          for (let i = 0; i < transcription.result.timeline.length; i++) {
+            try {
+              // Try to find segment for this index
+              const segments = await EnjoyApp.segments.findAll({
+                targetId: media.id,
+                targetType: media.mediaType,
+                segmentIndex: i,
+              });
+
+              // If segment exists, load its notes
+              if (segments && segments.length > 0) {
+                const segment = segments[0];
+                const notes = await EnjoyApp.notes.findAll({
+                  targetId: segment.id,
+                  targetType: "Segment",
+                });
+                if (notes && notes.length > 0) {
+                  // Include all notes - both word-level and sentence-level notes
+                  notesMap[i] = notes;
+                }
+              }
+            } catch (error) {
+              // Segment doesn't exist for this index, skip
+            }
+          }
+
+          setAllNotes(notesMap);
+        };
+
+        loadAllNotes();
+      }
     } else {
       setRecordingType("segment");
       setPlayMode(originalPlayMode.current);
+      setAllNotes({});
     }
-  }, [open]);
+  }, [open, media, transcription]);
 
   useEffect(() => {
     if (!wavesurfer) return;
@@ -139,7 +181,7 @@ export const MediaTranscriptionReadButton = forwardRef<
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {isValidElement(trigger) ? cloneElement(trigger, { ref }) : trigger}
+        {isValidElement(trigger) ? cloneElement(trigger as any, { ref }) : trigger}
       </DialogTrigger>
       <DialogContent
         onPointerDownOutside={(event) => event.preventDefault()}
@@ -163,7 +205,8 @@ export const MediaTranscriptionReadButton = forwardRef<
                         activeSentenceIndex === index ? activeWordIndex : -1
                       }
                       displayIpa={false}
-                      displayNotes={false}
+                      displayNotes={notesVisible}
+                      notes={allNotes[index] || []}
                     />
                   </div>
                 )
@@ -174,7 +217,12 @@ export const MediaTranscriptionReadButton = forwardRef<
           </div>
         </ScrollArea>
         <div className="h-24 border-t">
-          {open && <ReadThroughControls />}
+          {open && (
+            <ReadThroughControls
+              notesVisible={notesVisible}
+              setNotesVisible={setNotesVisible}
+            />
+          )}
         </div>
       </DialogContent>
     </Dialog>
@@ -339,9 +387,15 @@ const TranscriptionRecordingsList = () => {
 
 const PLAYBACK_RATE_OPTIONS = [0.7, 0.8, 0.9, 1.0];
 
-const ReadThroughPlayer = () => {
+const ReadThroughPlayer = ({
+  notesVisible,
+  setNotesVisible,
+}: {
+  notesVisible: boolean;
+  setNotesVisible: (visible: boolean) => void;
+}) => {
   const { wavesurfer } = useContext(MediaShadowProviderContext);
-  const [playbackRate, setPlaybackRate] = useState(1.0);
+  const [playbackRate, setPlaybackRate] = useState(0.8);
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
@@ -366,7 +420,6 @@ const ReadThroughPlayer = () => {
     const rect = progressRef.current.getBoundingClientRect();
     const x = clientX - rect.left;
     const percentage = Math.max(0, Math.min(1, x / rect.width));
-    const seekTime = percentage * duration;
 
     wavesurfer.seekTo(percentage);
   };
@@ -430,7 +483,7 @@ const ReadThroughPlayer = () => {
   }, [wavesurfer]);
 
   return (
-    <div className="w-full">
+    <div className="w-full max-w-2xl mx-auto">
       <div className="flex items-center justify-between">
         <span className="text-sm font-mono">
           {formatDuration(currentTime)}
@@ -475,15 +528,34 @@ const ReadThroughPlayer = () => {
             <PlayIcon fill="white" className="w-6 h-6" />
           )}
         </Button>
+
+        <Button
+          variant={notesVisible ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setNotesVisible(!notesVisible)}
+          className="gap-1"
+        >
+          <StickyNoteIcon className="w-4 h-4" />
+          <span className="text-xs">{notesVisible ? t("hideNotes") : t("showNotes")}</span>
+        </Button>
       </div>
     </div>
   );
 };
 
-const ReadThroughControls = () => {
+const ReadThroughControls = ({
+  notesVisible,
+  setNotesVisible,
+}: {
+  notesVisible: boolean;
+  setNotesVisible: (visible: boolean) => void;
+}) => {
   return (
     <div className="h-full flex items-center justify-center px-6">
-      <ReadThroughPlayer />
+      <ReadThroughPlayer
+        notesVisible={notesVisible}
+        setNotesVisible={setNotesVisible}
+      />
     </div>
   );
 };
