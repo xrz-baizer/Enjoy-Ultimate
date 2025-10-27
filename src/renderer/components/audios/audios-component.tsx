@@ -53,7 +53,9 @@ export const AudiosComponent = () => {
     localStorage.getItem("audios-category") || "all"
   );
   const [categories, setCategories] = useState<CategoryType[]>([]);
-  const [orderBy, setOrderBy] = useState<string | null>("nameDesc");
+  const [orderBy, setOrderBy] = useState<string | null>(
+    localStorage.getItem("audios-orderBy") || "nameDesc"
+  );
   const debouncedQuery = useDebounce(query, 500);
 
   const [editing, setEditing] = useState<Partial<AudioType> | null>(null);
@@ -175,6 +177,9 @@ export const AudiosComponent = () => {
     fetchAudios({ offset: 0 });
     if (category) {
       localStorage.setItem("audios-category", category);
+    }
+    if (orderBy) {
+      localStorage.setItem("audios-orderBy", orderBy);
     }
   }, [debouncedQuery, category, orderBy]);
 

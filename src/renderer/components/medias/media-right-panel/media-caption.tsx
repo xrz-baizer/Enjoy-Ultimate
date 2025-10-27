@@ -169,7 +169,7 @@ export const MediaCaption = (props: {
               key={`sentence-note-${currentSegmentIndex}-${note.id}`}
               className="mb-2 p-2 text-green-700 bg-green-500/10 rounded border-l-2 border-green-500 font-code cursor-pointer"
               style={{
-                fontSize: `calc(0.875rem * var(--caption-text-size, 1))`
+                fontSize: `calc(0.75rem * var(--caption-text-size, 1))`
               }}
               onClick={() =>
                 document.getElementById("note-" + note.id)?.scrollIntoView()

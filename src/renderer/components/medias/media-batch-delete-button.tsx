@@ -128,8 +128,8 @@ export const MediaBatchDeleteButton = (props: {
               {t("noData")}
             </div>
           ) : (
-            <ScrollArea className="max-h-96">
-              <div className="space-y-2">
+            <ScrollArea className="h-96">
+              <div className="space-y-2 pr-4">
                 {items.map((item) => (
                   <div
                     key={item.id}

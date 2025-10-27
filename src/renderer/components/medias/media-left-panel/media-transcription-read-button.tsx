@@ -48,6 +48,7 @@ import {
   MoreHorizontalIcon,
   PauseIcon,
   PlayIcon,
+  RepeatIcon,
   StickyNoteIcon,
   Trash2Icon,
 } from "lucide-react";
@@ -399,6 +400,7 @@ const ReadThroughPlayer = ({
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [loop, setLoop] = useState(false);
   const progressRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -471,6 +473,12 @@ const ReadThroughPlayer = ({
       wavesurfer.on("timeupdate", (time) => {
         setCurrentTime(time);
       }),
+      wavesurfer.on("finish", () => {
+        if (loop) {
+          wavesurfer.seekTo(0);
+          wavesurfer.play();
+        }
+      }),
     ];
 
     setPlaying(wavesurfer.isPlaying());
@@ -480,7 +488,7 @@ const ReadThroughPlayer = ({
     return () => {
       subscriptions.forEach((unsub) => unsub());
     };
-  }, [wavesurfer]);
+  }, [wavesurfer, loop]);
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -527,6 +535,16 @@ const ReadThroughPlayer = ({
           ) : (
             <PlayIcon fill="white" className="w-6 h-6" />
           )}
+        </Button>
+
+        <Button
+          variant={loop ? "default" : "ghost"}
+          size="sm"
+          onClick={() => setLoop(!loop)}
+          className="gap-1"
+        >
+          <RepeatIcon className="w-4 h-4" />
+          <span className="text-xs">{t("loop")}</span>
         </Button>
 
         <Button
