@@ -80,8 +80,11 @@ export const MediaProvider = (props: { className?: string }) => {
           }
         }}
         onError={(err) => {
-          toast.error(err.message);
-          setDecodeError(err.message);
+          console.error(`[MediaProvider] Vidstack error:`, err);
+          console.error(`[MediaProvider] Media src: ${media?.src}`);
+          const errorMsg = err.message || "Error loading media";
+          toast.error(errorMsg);
+          setDecodeError(errorMsg);
         }}
       >
         <VidstackMediaProvider />

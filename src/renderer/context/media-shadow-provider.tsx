@@ -269,16 +269,32 @@ export const MediaShadowProvider = ({
       duration: waveform ? waveform.duration : undefined,
     });
 
-    const blob = await fetch(media.src).then((res) => res.blob());
+    try {
+      console.debug(`[MediaShadowProvider] Fetching audio blob from: ${media.src}`);
+      const response = await fetch(media.src);
 
-    if (waveform) {
-      ws.loadBlob(blob, [waveform.peaks], waveform.duration);
-      setDecoded(true);
-    } else {
-      ws.loadBlob(blob);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch audio: ${response.status} ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      console.debug(`[MediaShadowProvider] Fetched blob size: ${blob.size} bytes, type: ${blob.type}`);
+
+      if (waveform) {
+        console.debug(`[MediaShadowProvider] Loading with cached waveform`);
+        ws.loadBlob(blob, [waveform.peaks], waveform.duration);
+        setDecoded(true);
+      } else {
+        console.debug(`[MediaShadowProvider] Loading blob without cached waveform`);
+        ws.loadBlob(blob);
+      }
+
+      setWavesurfer(ws);
+    } catch (error) {
+      console.error(`[MediaShadowProvider] Error initializing wavesurfer:`, error);
+      setDecodeError(error.message || "Failed to fetch audio file");
+      ws.destroy();
     }
-
-    setWavesurfer(ws);
   };
 
   const renderPitchContour = (
@@ -592,11 +608,19 @@ export const MediaShadowProvider = ({
         setDecoded(true);
       }),
       wavesurfer.on("error", async (err: Error) => {
+        console.error(`[MediaShadowProvider] Wavesurfer error:`, err);
+        console.error(`[MediaShadowProvider] Media src: ${media.src}`);
+        console.error(`[MediaShadowProvider] Media md5: ${media.md5}`);
+        console.error(`[MediaShadowProvider] Decoded state: ${decoded}`);
+        console.error(`[MediaShadowProvider] Transcoding state: ${transcoding}`);
+
         // If decode fails and media is not already transcoded, try transcoding to WAV
         if (!media.src.endsWith(".wav") && !transcoding) {
+          console.log(`[MediaShadowProvider] Attempting to transcode to WAV`);
           setTranscoding(true);
           try {
             const transcodedSrc = await EnjoyApp.ffmpeg.transcode(media.src);
+            console.log(`[MediaShadowProvider] Transcoding successful: ${transcodedSrc}`);
             setTranscoding(false);
             // Update media src to use transcoded file
             setMedia({ ...media, src: transcodedSrc });
@@ -604,6 +628,7 @@ export const MediaShadowProvider = ({
             setDecodeError(null);
             return;
           } catch (transcodeErr) {
+            console.error(`[MediaShadowProvider] Transcoding failed:`, transcodeErr);
             setTranscoding(false);
             toast.error(
               `${t("failedToDecodeWaveform")}: ${transcodeErr.message}`
@@ -616,11 +641,13 @@ export const MediaShadowProvider = ({
           }
         }
 
-        toast.error(err?.message || "Error occurred while decoding audio");
-        setDecodeError(err?.message || "Error occurred while decoding audio");
+        const errorMsg = err?.message || "Error occurred while decoding audio";
+        toast.error(errorMsg);
+        setDecodeError(errorMsg);
         EnjoyApp.waveforms.destroy(media.md5);
         // Reload page when error occurred after decoding
         if (decoded) {
+          console.log(`[MediaShadowProvider] Error occurred after decoding, reloading page`);
           window.location.reload();
         }
       }),

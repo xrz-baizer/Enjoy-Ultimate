@@ -1,5 +1,6 @@
 import { app, BrowserWindow, protocol, net, ipcMain } from "electron";
 import path from "path";
+import { pathToFileURL } from "url";
 import fs from "fs-extra";
 import settings from "@main/settings";
 import log from "@main/logger";
@@ -167,7 +168,12 @@ app.on("ready", async () => {
       url = path.join(settings.libraryPath(), url);
     }
 
-    return net.fetch(`file:///${url}`);
+    // Use pathToFileURL to ensure correct file:// URL format
+    // This handles platform-specific path differences correctly
+    const fileUrl = pathToFileURL(url).href;
+    logger.debug(`Protocol handler: enjoy://${request.url.replace("enjoy://", "")} -> ${fileUrl}`);
+
+    return net.fetch(fileUrl);
   });
 
   mainWindow.init();

@@ -49,8 +49,11 @@ import {
   PauseIcon,
   PlayIcon,
   RepeatIcon,
+  Repeat1Icon,
+  ListOrderedIcon,
   StickyNoteIcon,
   Trash2Icon,
+  TimerIcon,
 } from "lucide-react";
 import { useRecordings } from "@renderer/hooks";
 import { formatDateTime, formatDuration } from "@renderer/lib/utils";
@@ -80,8 +83,10 @@ export const MediaTranscriptionReadButton = forwardRef<
     wavesurfer,
   } = useContext(MediaShadowProviderContext);
   const originalPlayMode = useRef(playMode);
-  const [activeSentenceIndex, setActiveSentenceIndex] = useState<number>(0);
+  const [activeSentenceIndex, setActiveSentenceIndex] = useState<number>(-1);
   const [activeWordIndex, setActiveWordIndex] = useState<number>(0);
+  const sentenceRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -166,6 +171,20 @@ export const MediaTranscriptionReadButton = forwardRef<
     };
   }, [wavesurfer, open, transcription?.result]);
 
+  // Auto-scroll effect: center the current sentence during playback
+  useEffect(() => {
+    if (!open || activeSentenceIndex < 0) return;
+
+    const currentSentence = sentenceRefs.current[activeSentenceIndex];
+    if (!currentSentence) return;
+
+    // Center the current sentence
+    currentSentence.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }, [activeSentenceIndex, open]);
+
   // 如果 media 或 transcription 不存在，不渲染按钮
   if (!media || !transcription?.result?.timeline) {
     return null;
@@ -189,26 +208,68 @@ export const MediaTranscriptionReadButton = forwardRef<
         className="max-w-full h-5/6 flex flex-col p-0"
       >
         <DialogTitle className="hidden">{t("readThrough")}</DialogTitle>
-        <ScrollArea className="flex-1 px-6 pt-4">
+        <ScrollArea className="flex-1 px-6 pt-4" ref={scrollContainerRef}>
           <div className="select-text mx-auto w-[93%] p-10 theme-green">
             <h3 className="font-bold text-xl my-4">{media.name}</h3>
             {open &&
                 transcription.result.timeline.map(
                     (sentence: TimelineEntry, index: number) => (
-                  <div key={index} className="flex flex-start space-x-2">
-                    <span className="text-sm text-muted-foreground min-w-max leading-8">
+                  <div
+                    key={index}
+                    className="flex flex-start space-x-2 group"
+                    ref={(el) => {
+                      sentenceRefs.current[index] = el;
+                    }}
+                  >
+                    <span
+                      className="text-sm text-muted-foreground min-w-max leading-8 cursor-pointer px-2 py-1 -ml-2 rounded-l-md group-hover:bg-sky-500/10 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!wavesurfer) return;
+                        const duration = wavesurfer.getDuration();
+                        if (!duration) return;
+                        const percentage = sentence.startTime / duration;
+                        wavesurfer.seekTo(percentage);
+                        // Auto play when clicking sentence
+                        if (!wavesurfer.isPlaying()) {
+                          wavesurfer.play();
+                        }
+                      }}
+                    >
                       #{index + 1}
                     </span>
-                    <MediaCaption
-                      caption={sentence}
-                      currentSegmentIndex={index}
-                      activeIndex={
-                        activeSentenceIndex === index ? activeWordIndex : -1
-                      }
-                      displayIpa={false}
-                      displayNotes={notesVisible}
-                      notes={allNotes[index] || []}
-                    />
+                    <div
+                      className="flex-1 cursor-pointer rounded-r-md group-hover:bg-sky-500/10 transition-colors"
+                      onClick={(e) => {
+                        // Check if click is on a word or note element
+                        const target = e.target as HTMLElement;
+                        if (target.closest('.cursor-pointer') && target.closest('.cursor-pointer') !== e.currentTarget) {
+                          return; // Let the child element handle it
+                        }
+
+                        e.stopPropagation();
+                        if (!wavesurfer) return;
+                        const duration = wavesurfer.getDuration();
+                        if (!duration) return;
+                        const percentage = sentence.startTime / duration;
+                        wavesurfer.seekTo(percentage);
+                        // Auto play when clicking sentence
+                        if (!wavesurfer.isPlaying()) {
+                          wavesurfer.play();
+                        }
+                      }}
+                    >
+                      <MediaCaption
+                        caption={sentence}
+                        currentSegmentIndex={index}
+                        activeIndex={
+                          activeSentenceIndex === index ? activeWordIndex : -1
+                        }
+                        displayIpa={false}
+                        displayNotes={notesVisible}
+                        notes={allNotes[index] || []}
+                      />
+                    </div>
                   </div>
                 )
               )}
@@ -222,6 +283,7 @@ export const MediaTranscriptionReadButton = forwardRef<
             <ReadThroughControls
               notesVisible={notesVisible}
               setNotesVisible={setNotesVisible}
+              scrollContainerRef={scrollContainerRef}
             />
           )}
         </div>
@@ -387,22 +449,31 @@ const TranscriptionRecordingsList = () => {
 };
 
 const PLAYBACK_RATE_OPTIONS = [0.7, 0.8, 0.9, 1.0];
+const LOOP_INTERVAL_OPTIONS = [0, 1, 2, 3];
+
+type PlayMode = "all" | "single" | "single-loop";
 
 const ReadThroughPlayer = ({
   notesVisible,
   setNotesVisible,
+  scrollContainerRef,
 }: {
   notesVisible: boolean;
   setNotesVisible: (visible: boolean) => void;
+  scrollContainerRef: React.RefObject<HTMLDivElement>;
 }) => {
-  const { wavesurfer } = useContext(MediaShadowProviderContext);
+  const { wavesurfer, transcription } = useContext(MediaShadowProviderContext);
   const [playbackRate, setPlaybackRate] = useState(0.8);
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [loop, setLoop] = useState(false);
+  const [playMode, setPlayMode] = useState<PlayMode>("all");
+  const [loopInterval, setLoopInterval] = useState(1); // seconds
   const progressRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [currentSentenceIndex, setCurrentSentenceIndex] = useState<number>(-1);
+  const currentSentenceRef = useRef<number>(-1);
+  const loopTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handlePlayPause = async () => {
     if (!wavesurfer) return;
@@ -457,6 +528,7 @@ const ReadThroughPlayer = ({
 
   useEffect(() => {
     if (!wavesurfer) return;
+    if (!transcription?.result?.timeline) return;
 
     wavesurfer.setPlaybackRate(playbackRate);
 
@@ -472,9 +544,66 @@ const ReadThroughPlayer = ({
       }),
       wavesurfer.on("timeupdate", (time) => {
         setCurrentTime(time);
+
+        // Find current sentence
+        let sentenceIndex = -1;
+        for (let i = 0; i < transcription.result.timeline.length; i++) {
+          const sentence = transcription.result.timeline[i] as TimelineEntry;
+          if (time >= sentence.startTime && time < sentence.endTime) {
+            sentenceIndex = i;
+            break;
+          }
+        }
+
+        setCurrentSentenceIndex(sentenceIndex);
+        currentSentenceRef.current = sentenceIndex;
+
+        // Handle single sentence playback
+        if (playMode === "single" && sentenceIndex !== -1) {
+          const sentence = transcription.result.timeline[sentenceIndex] as TimelineEntry;
+          // Check if we've reached the end of the current sentence
+          if (time >= sentence.endTime - 0.05) { // 0.05s tolerance
+            wavesurfer.pause();
+          }
+        } else if (playMode === "single-loop" && sentenceIndex !== -1) {
+          const sentence = transcription.result.timeline[sentenceIndex] as TimelineEntry;
+          // Loop back to the start of current sentence with interval
+          if (time >= sentence.endTime - 0.05) { // 0.05s tolerance
+            // Clear any existing timeout
+            if (loopTimeoutRef.current) {
+              clearTimeout(loopTimeoutRef.current);
+            }
+
+            // Pause at the end of sentence
+            wavesurfer.pause();
+
+            // Wait for the interval, then loop back
+            if (loopInterval > 0) {
+              loopTimeoutRef.current = setTimeout(() => {
+                const percentage = sentence.startTime / wavesurfer.getDuration();
+                wavesurfer.seekTo(percentage);
+                wavesurfer.play();
+              }, loopInterval * 1000);
+            } else {
+              // No interval, loop immediately
+              const percentage = sentence.startTime / wavesurfer.getDuration();
+              wavesurfer.seekTo(percentage);
+              wavesurfer.play();
+            }
+          }
+        }
       }),
       wavesurfer.on("finish", () => {
-        if (loop) {
+        // Only loop for "all" mode when reaching the end
+        if (playMode === "all") {
+          // Scroll to top
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTo({
+              top: 0,
+              behavior: "smooth",
+            });
+          }
+          // Restart playback from beginning
           wavesurfer.seekTo(0);
           wavesurfer.play();
         }
@@ -487,8 +616,12 @@ const ReadThroughPlayer = ({
 
     return () => {
       subscriptions.forEach((unsub) => unsub());
+      // Clear any pending loop timeout
+      if (loopTimeoutRef.current) {
+        clearTimeout(loopTimeoutRef.current);
+      }
     };
-  }, [wavesurfer, loop]);
+  }, [wavesurfer, playMode, loopInterval, scrollContainerRef, transcription]);
 
   return (
     <div className="w-full max-w-2xl mx-auto">
@@ -537,15 +670,84 @@ const ReadThroughPlayer = ({
           )}
         </Button>
 
-        <Button
-          variant={loop ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setLoop(!loop)}
-          className="gap-1"
-        >
-          <RepeatIcon className="w-4 h-4" />
-          <span className="text-xs">{t("loop")}</span>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant={playMode !== "all" ? "default" : "ghost"}
+              size="sm"
+              className="gap-1"
+            >
+              {playMode === "all" && (
+                <>
+                  <ListOrderedIcon className="w-4 h-4" />
+                  <span className="text-xs">{t("playAll")}</span>
+                </>
+              )}
+              {playMode === "single" && (
+                <>
+                  <Repeat1Icon className="w-4 h-4" />
+                  <span className="text-xs">{t("playSingle")}</span>
+                </>
+              )}
+              {playMode === "single-loop" && (
+                <>
+                  <RepeatIcon className="w-4 h-4" />
+                  <span className="text-xs">{t("loopSingle")}</span>
+                </>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem
+              onClick={() => setPlayMode("all")}
+              className="cursor-pointer"
+            >
+              <ListOrderedIcon className="w-4 h-4 mr-2" />
+              <span>{t("playAll")}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setPlayMode("single")}
+              className="cursor-pointer"
+            >
+              <Repeat1Icon className="w-4 h-4 mr-2" />
+              <span>{t("playSingle")}</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setPlayMode("single-loop")}
+              className="cursor-pointer"
+            >
+              <RepeatIcon className="w-4 h-4 mr-2" />
+              <span>{t("loopSingle")}</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {playMode === "single-loop" && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1"
+              >
+                <TimerIcon className="w-4 h-4" />
+                <span className="text-xs">{loopInterval}s</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {LOOP_INTERVAL_OPTIONS.map((interval) => (
+                <DropdownMenuItem
+                  key={interval}
+                  onClick={() => setLoopInterval(interval)}
+                  className="cursor-pointer"
+                >
+                  <TimerIcon className="w-4 h-4 mr-2" />
+                  <span>{interval === 0 ? t("noInterval") : `${interval}s`}</span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         <Button
           variant={notesVisible ? "default" : "ghost"}
@@ -564,15 +766,18 @@ const ReadThroughPlayer = ({
 const ReadThroughControls = ({
   notesVisible,
   setNotesVisible,
+  scrollContainerRef,
 }: {
   notesVisible: boolean;
   setNotesVisible: (visible: boolean) => void;
+  scrollContainerRef: React.RefObject<HTMLDivElement>;
 }) => {
   return (
     <div className="h-full flex items-center justify-center px-6">
       <ReadThroughPlayer
         notesVisible={notesVisible}
         setNotesVisible={setNotesVisible}
+        scrollContainerRef={scrollContainerRef}
       />
     </div>
   );
