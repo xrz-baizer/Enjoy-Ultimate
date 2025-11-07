@@ -50,6 +50,8 @@ type MediaShadowContextType = {
   setZoomRatio: (zoomRation: number) => void;
   fitZoomRatio: number;
   minPxPerSec: number;
+  clickToPlay: boolean;
+  setClickToPlay: (enabled: boolean) => void;
   // regions
   regions: Regions | null;
   activeRegion: RegionType;
@@ -165,6 +167,7 @@ export const MediaShadowProvider = ({
   const [currentSegmentIndex, setCurrentSegmentIndex] = useState<number>(0);
   const [fitZoomRatio, setFitZoomRatio] = useState<number>(1.0);
   const [zoomRatio, setZoomRatio] = useState<number>(1.0);
+  const [clickToPlay, setClickToPlay] = useState<boolean>(true);
 
   const [currentRecording, setCurrentRecording] = useState<RecordingType>(null);
   const [recordingType, setRecordingType] = useState<string>("segment");
@@ -812,6 +815,8 @@ export const MediaShadowProvider = ({
           setZoomRatio,
           fitZoomRatio,
           minPxPerSec,
+          clickToPlay,
+          setClickToPlay,
           transcription,
           regions,
           pitchChart,

@@ -141,7 +141,8 @@ export const MediaCaption = (props: {
                     key={`note-${currentSegmentIndex}-${note.id}`}
                     className="mb-1 text-red-500 max-w-64 line-clamp-3 font-code cursor-pointer"
                     style={{
-                      fontSize: `calc(0.75rem * var(--caption-text-size, 1))`
+                      fontSize: `calc(0.75rem * var(--caption-text-size, 1))`,
+                      textAlign: "right",
                     }}
                     onMouseOver={() =>
                       setNotedquoteIndices(note.parameters.quoteIndices)

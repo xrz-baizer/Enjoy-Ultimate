@@ -44,6 +44,7 @@ export const MediaTranscription = (props: { display?: boolean }) => {
     transcription,
     transcribing,
     transcribingProgress,
+    clickToPlay,
   } = useContext(MediaShadowProviderContext);
   const { EnjoyApp } = useContext(AppSettingsProviderContext);
   const { addDblistener, removeDbListener } = useContext(DbProviderContext);
@@ -200,9 +201,30 @@ export const MediaTranscription = (props: { display?: boolean }) => {
               currentSegmentIndex === index ? "bg-yellow-400/25" : ""
             }`}
             onClick={() => {
-              wavesurfer.setTime(parseFloat(sentence.startTime.toFixed(6)));
-              wavesurfer.setScrollTime(sentence.startTime);
+              const wasPlaying = wavesurfer.isPlaying();
+
+              // Pause first to ensure clean state transition
+              if (wasPlaying) {
+                wavesurfer.pause();
+              }
+
+              // Set the new segment index first to trigger region update
               setCurrentSegmentIndex(index);
+
+              // Wait for region update to complete (debounced by 100ms in MediaPlayerControls)
+              // then set the time and play
+              setTimeout(() => {
+                wavesurfer.setTime(parseFloat(sentence.startTime.toFixed(6)));
+                wavesurfer.setScrollTime(sentence.startTime);
+
+                // Play if clickToPlay is enabled
+                if (clickToPlay) {
+                  // Small additional delay to ensure time is set
+                  setTimeout(() => {
+                    wavesurfer.play();
+                  }, 50);
+                }
+              }, 150);
             }}
           >
             <div className="flex items-center justify-between">

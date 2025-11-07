@@ -6,9 +6,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   Button,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
 } from "@renderer/components/ui";
 import {
   MediaShadowProviderContext,
@@ -29,6 +26,7 @@ import {
   UndoIcon,
   GroupIcon,
   BookOpenTextIcon,
+  MousePointerClickIcon,
 } from "lucide-react";
 import { t } from "i18next";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -59,6 +57,8 @@ export const MediaPlayerControls = () => {
     setTranscriptionDraft,
     playMode,
     setPlayMode,
+    clickToPlay,
+    setClickToPlay,
   } = useContext(MediaShadowProviderContext);
   const { EnjoyApp } = useContext(AppSettingsProviderContext);
   const { currentHotkeys } = useContext(HotKeysSettingsProviderContext);
@@ -669,6 +669,17 @@ export const MediaPlayerControls = () => {
           onClick={() => setGrouping(!grouping)}
         >
           <GroupIcon className="w-6 h-6" />
+        </Button>
+
+        <Button
+          variant={clickToPlay ? "secondary" : "ghost"}
+          size="icon"
+          data-tooltip-id="media-shadow-tooltip"
+          data-tooltip-content={t("clickToPlay")}
+          className="relative aspect-square p-0 h-8"
+          onClick={() => setClickToPlay(!clickToPlay)}
+        >
+          <MousePointerClickIcon className="w-6 h-6" />
         </Button>
 
         <div className="relative">
