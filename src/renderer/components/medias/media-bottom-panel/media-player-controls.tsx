@@ -74,19 +74,121 @@ export const MediaPlayerControls = () => {
   const debouncedPlayOrPause = debounce(playOrPause, 100);
 
   const onPrev = () => {
-    if (!wavesurfer) return;
-    const segment = transcription?.result?.timeline[currentSegmentIndex - 1];
+    if (!wavesurfer || !regions) return;
+    const newIndex = currentSegmentIndex - 1;
+    const segment = transcription?.result?.timeline[newIndex];
     if (!segment) return;
 
-    setCurrentSegmentIndex(currentSegmentIndex - 1);
+    // Save current playing state
+    const wasPlaying = wavesurfer.isPlaying();
+
+    // Pause first to prevent conflicts
+    if (wasPlaying) {
+      wavesurfer.pause();
+    }
+
+    // Update the segment index first
+    setCurrentSegmentIndex(newIndex);
+
+    // Immediately create/update the region for the new segment
+    const id = `segment-region-${newIndex}`;
+    const from = segment.startTime;
+    const to = segment.endTime;
+    const span = document.createElement("span");
+    span.innerText = `#${newIndex + 1} (${(to - from).toFixed(2)}s)`;
+    span.style.padding = "1rem";
+    span.style.fontSize = "0.9rem";
+
+    // Remove old segment regions
+    regions
+      .getRegions()
+      .filter((r) => r.id.startsWith("segment-region"))
+      .forEach((r) => r.remove());
+
+    // Add new region
+    const newRegion = regions.addRegion({
+      id,
+      start: from,
+      end: to,
+      color: "#fb6f9211",
+      drag: false,
+      resize: editingRegion,
+      content: span,
+    });
+
+    // Set as active region immediately
+    setActiveRegion(newRegion);
+
+    // Seek to the new position
+    wavesurfer.seekTo(from / wavesurfer.getDuration());
+    wavesurfer.setScrollTime(from);
+
+    // Resume playing if it was playing before, or if clickToPlay is enabled
+    if (wasPlaying || clickToPlay) {
+      // Use requestAnimationFrame to ensure smooth playback
+      requestAnimationFrame(() => {
+        wavesurfer.play();
+      });
+    }
   };
 
   const onNext = () => {
-    if (!wavesurfer) return;
-    const segment = transcription?.result?.timeline[currentSegmentIndex + 1];
+    if (!wavesurfer || !regions) return;
+    const newIndex = currentSegmentIndex + 1;
+    const segment = transcription?.result?.timeline[newIndex];
     if (!segment) return;
 
-    setCurrentSegmentIndex(currentSegmentIndex + 1);
+    // Save current playing state
+    const wasPlaying = wavesurfer.isPlaying();
+
+    // Pause first to prevent conflicts
+    if (wasPlaying) {
+      wavesurfer.pause();
+    }
+
+    // Update the segment index first
+    setCurrentSegmentIndex(newIndex);
+
+    // Immediately create/update the region for the new segment
+    const id = `segment-region-${newIndex}`;
+    const from = segment.startTime;
+    const to = segment.endTime;
+    const span = document.createElement("span");
+    span.innerText = `#${newIndex + 1} (${(to - from).toFixed(2)}s)`;
+    span.style.padding = "1rem";
+    span.style.fontSize = "0.9rem";
+
+    // Remove old segment regions
+    regions
+      .getRegions()
+      .filter((r) => r.id.startsWith("segment-region"))
+      .forEach((r) => r.remove());
+
+    // Add new region
+    const newRegion = regions.addRegion({
+      id,
+      start: from,
+      end: to,
+      color: "#fb6f9211",
+      drag: false,
+      resize: editingRegion,
+      content: span,
+    });
+
+    // Set as active region immediately
+    setActiveRegion(newRegion);
+
+    // Seek to the new position
+    wavesurfer.seekTo(from / wavesurfer.getDuration());
+    wavesurfer.setScrollTime(from);
+
+    // Resume playing if it was playing before, or if clickToPlay is enabled
+    if (wasPlaying || clickToPlay) {
+      // Use requestAnimationFrame to ensure smooth playback
+      requestAnimationFrame(() => {
+        wavesurfer.play();
+      });
+    }
   };
 
   /*
@@ -112,6 +214,16 @@ export const MediaPlayerControls = () => {
     if (!currentSegment) return;
 
     const id = `segment-region-${currentSegmentIndex}`;
+
+    // Check if the correct region already exists (created by onPrev/onNext)
+    const existingRegion = regions.getRegions().find((r) => r.id === id);
+    if (existingRegion &&
+        Math.abs(existingRegion.start - currentSegment.startTime) < 0.001 &&
+        Math.abs(existingRegion.end - currentSegment.endTime) < 0.001) {
+      // Region already exists and is correct, no need to recreate
+      return;
+    }
+
     const from = currentSegment.startTime;
     const to = currentSegment.endTime;
     const span = document.createElement("span");
@@ -441,6 +553,41 @@ export const MediaPlayerControls = () => {
     },
     {
       preventDefault: true,
+    }
+  );
+
+  // Additional keyboard controls: Space, Arrow keys
+  useHotkeys(
+    "space",
+    (e) => {
+      e.preventDefault();
+      findAndClickElement("media-play-or-pause-button");
+    },
+    {
+      preventDefault: true,
+      enableOnFormTags: false,
+    }
+  );
+  useHotkeys(
+    "left",
+    (e) => {
+      e.preventDefault();
+      findAndClickElement("media-play-previous-button");
+    },
+    {
+      preventDefault: true,
+      enableOnFormTags: false,
+    }
+  );
+  useHotkeys(
+    "right",
+    (e) => {
+      e.preventDefault();
+      findAndClickElement("media-play-next-button");
+    },
+    {
+      preventDefault: true,
+      enableOnFormTags: false,
     }
   );
   useHotkeys(

@@ -63,6 +63,7 @@ import {
   RecordingDetail,
   WavesurferPlayer,
 } from "@renderer/components";
+import { useHotkeys } from "react-hotkeys-hook";
 
 export const MediaTranscriptionReadButton = forwardRef<
   HTMLButtonElement,
@@ -178,10 +179,12 @@ export const MediaTranscriptionReadButton = forwardRef<
     const currentSentence = sentenceRefs.current[activeSentenceIndex];
     if (!currentSentence) return;
 
-    // Center the current sentence
-    currentSentence.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
+    // Use requestAnimationFrame to ensure smooth scrolling even with dynamic content (notes)
+    requestAnimationFrame(() => {
+      currentSentence.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
     });
   }, [activeSentenceIndex, open]);
 
@@ -216,13 +219,13 @@ export const MediaTranscriptionReadButton = forwardRef<
                     (sentence: TimelineEntry, index: number) => (
                   <div
                     key={index}
-                    className="flex flex-start space-x-2 group"
+                    className="flex flex-start space-x-2"
                     ref={(el) => {
                       sentenceRefs.current[index] = el;
                     }}
                   >
                     <span
-                      className="text-sm text-muted-foreground min-w-max leading-8 cursor-pointer px-2 py-1 -ml-2 rounded-l-md group-hover:bg-sky-500/10 transition-colors"
+                      className="text-sm text-muted-foreground min-w-max leading-8 cursor-pointer px-2 py-1 -ml-2 rounded-l-md"
                       onClick={(e) => {
                         e.stopPropagation();
                         if (!wavesurfer) return;
@@ -239,7 +242,7 @@ export const MediaTranscriptionReadButton = forwardRef<
                       #{index + 1}
                     </span>
                     <div
-                      className="flex-1 cursor-pointer rounded-r-md group-hover:bg-sky-500/10 transition-colors"
+                      className="flex-1 cursor-pointer rounded-r-md"
                       onClick={(e) => {
                         // Check if click is on a word or note element
                         const target = e.target as HTMLElement;
@@ -462,7 +465,7 @@ const ReadThroughPlayer = ({
   setNotesVisible: (visible: boolean) => void;
   scrollContainerRef: React.RefObject<HTMLDivElement>;
 }) => {
-  const { wavesurfer, transcription } = useContext(MediaShadowProviderContext);
+  const { wavesurfer, transcription, clickToPlay } = useContext(MediaShadowProviderContext);
   const [playbackRate, setPlaybackRate] = useState(0.8);
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -479,6 +482,98 @@ const ReadThroughPlayer = ({
     if (!wavesurfer) return;
     wavesurfer.playPause();
   };
+
+  const handlePrevSentence = () => {
+    if (!wavesurfer || !transcription?.result?.timeline) return;
+    const prevIndex = Math.max(0, currentSentenceRef.current - 1);
+    const prevSentence = transcription.result.timeline[prevIndex];
+    if (prevSentence) {
+      // Save current playing state
+      const wasPlaying = wavesurfer.isPlaying();
+
+      // Pause first to prevent conflicts
+      if (wasPlaying) {
+        wavesurfer.pause();
+      }
+
+      // Seek to the new position
+      const percentage = prevSentence.startTime / wavesurfer.getDuration();
+      wavesurfer.seekTo(percentage);
+
+      // Resume playing if it was playing before, or if clickToPlay is enabled
+      if (wasPlaying || clickToPlay) {
+        setTimeout(() => {
+          wavesurfer.play();
+        }, 50);
+      }
+    }
+  };
+
+  const handleNextSentence = () => {
+    if (!wavesurfer || !transcription?.result?.timeline) return;
+    const nextIndex = Math.min(
+      transcription.result.timeline.length - 1,
+      currentSentenceRef.current + 1
+    );
+    const nextSentence = transcription.result.timeline[nextIndex];
+    if (nextSentence) {
+      // Save current playing state
+      const wasPlaying = wavesurfer.isPlaying();
+
+      // Pause first to prevent conflicts
+      if (wasPlaying) {
+        wavesurfer.pause();
+      }
+
+      // Seek to the new position
+      const percentage = nextSentence.startTime / wavesurfer.getDuration();
+      wavesurfer.seekTo(percentage);
+
+      // Resume playing if it was playing before, or if clickToPlay is enabled
+      if (wasPlaying || clickToPlay) {
+        setTimeout(() => {
+          wavesurfer.play();
+        }, 50);
+      }
+    }
+  };
+
+  // Keyboard controls
+  useHotkeys(
+    "space",
+    (e) => {
+      e.preventDefault();
+      handlePlayPause();
+    },
+    {
+      enableOnFormTags: false,
+    },
+    [wavesurfer]
+  );
+
+  useHotkeys(
+    "left",
+    (e) => {
+      e.preventDefault();
+      handlePrevSentence();
+    },
+    {
+      enableOnFormTags: false,
+    },
+    [wavesurfer, transcription]
+  );
+
+  useHotkeys(
+    "right",
+    (e) => {
+      e.preventDefault();
+      handleNextSentence();
+    },
+    {
+      enableOnFormTags: false,
+    },
+    [wavesurfer, transcription]
+  );
 
   const handleSetPlaybackRate = (rate: number) => {
     setPlaybackRate(rate);
