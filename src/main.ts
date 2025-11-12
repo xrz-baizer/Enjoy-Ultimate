@@ -154,8 +154,11 @@ app.on("ready", async () => {
       .catch((err) => console.log("An error occurred: ", err));
   }
 
-  protocol.handle("enjoy", (request) => {
+  protocol.handle("enjoy", async (request) => {
+    const startTime = Date.now();
+    const originalUrl = request.url;
     let url = request.url.replace("enjoy://", "");
+
     if (
       url.match(
         /library\/(audios|videos|recordings|speeches|segments|documents)/g
@@ -169,11 +172,114 @@ app.on("ready", async () => {
     }
 
     // Use pathToFileURL to ensure correct file:// URL format
-    // This handles platform-specific path differences correctly
     const fileUrl = pathToFileURL(url).href;
-    logger.debug(`Protocol handler: enjoy://${request.url.replace("enjoy://", "")} -> ${fileUrl}`);
+    logger.debug(`[Protocol] Request: ${originalUrl} -> ${fileUrl}`);
 
-    return net.fetch(fileUrl);
+    // File existence check
+    if (!fs.existsSync(url)) {
+      logger.error(`[Protocol] File not found: ${url}`);
+      return new Response("File not found", { status: 404 });
+    }
+
+    // Get file stats for logging
+    const stats = fs.statSync(url);
+    logger.debug(`[Protocol] File size: ${stats.size} bytes`);
+
+    try {
+      const response = await net.fetch(fileUrl);
+
+      if (!response.ok) {
+        logger.error(`[Protocol] Fetch failed: ${response.status} ${response.statusText}`);
+        return response;
+      }
+
+      // Add cache control headers to prevent stale/partial responses
+      const headers = new Headers(response.headers);
+      headers.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      headers.set("Pragma", "no-cache");
+      headers.set("Accept-Ranges", "bytes");
+
+      // Monitor stream to track bytes transferred
+      let totalBytes = 0;
+      const originalBody = response.body;
+
+      if (!originalBody) {
+        logger.error(`[Protocol] No response body for ${url}`);
+        return new Response("No content", { status: 204 });
+      }
+
+      const monitoredBody = new ReadableStream({
+        async start(controller) {
+          const reader = originalBody.getReader();
+          let isClosed = false;
+
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              totalBytes += value.length;
+
+              // Only enqueue if controller is not closed
+              if (!isClosed) {
+                try {
+                  controller.enqueue(value);
+                } catch (enqueueError) {
+                  // Controller was closed by consumer, stop reading
+                  isClosed = true;
+                  break;
+                }
+              }
+            }
+
+            const duration = Date.now() - startTime;
+            logger.debug(
+              `[Protocol] Transfer complete: ${totalBytes}/${stats.size} bytes in ${duration}ms for ${path.basename(url)}`
+            );
+
+            if (totalBytes !== stats.size) {
+              logger.warn(
+                `[Protocol] SIZE MISMATCH! Expected ${stats.size} bytes, got ${totalBytes} bytes for ${path.basename(url)}`
+              );
+            }
+
+            // Only close if not already closed
+            if (!isClosed) {
+              try {
+                controller.close();
+              } catch (closeError) {
+                // Controller already closed, ignore
+              }
+            }
+          } catch (error) {
+            logger.error(`[Protocol] Stream error for ${url}:`, error);
+            if (!isClosed) {
+              try {
+                controller.error(error);
+              } catch {
+                // Controller already closed, ignore
+              }
+            }
+          } finally {
+            // Ensure reader is released
+            try {
+              reader.releaseLock();
+            } catch {
+              // Already released, ignore
+            }
+          }
+        },
+      });
+
+      return new Response(monitoredBody, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: headers,
+      });
+    } catch (error) {
+      logger.error(`[Protocol] Error handling ${originalUrl}:`, error);
+      return new Response("Internal error", { status: 500 });
+    }
   });
 
   mainWindow.init();

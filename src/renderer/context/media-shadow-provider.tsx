@@ -245,8 +245,13 @@ export const MediaShadowProvider = ({
 
   const initializeWavesurfer = async () => {
     if (!media) return;
-    if (!mediaProvider) return;
+    if (!mediaProvider) {
+      console.debug(`[MediaShadowProvider] Skipping WaveSurfer init - no mediaProvider`);
+      return;
+    }
     if (!waveformContainerRef?.current) return;
+
+    console.debug(`[MediaShadowProvider] Initializing WaveSurfer for: ${media.src}`);
 
     const height =
       waveformContainerRef.current.getBoundingClientRect().height - 10; // -10 to leave space for scrollbar

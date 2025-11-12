@@ -32,6 +32,10 @@ export const MediaLeftPanel = (props: {
     setTab("transcription");
   }, [decoded]);
 
+  useEffect(() => {
+    console.debug(`[MediaLeftPanel] Media changed to: ${media?.id} (${media?.name})`);
+  }, [media?.id]);
+
   if (!media) return null;
 
   return (
@@ -84,9 +88,9 @@ export const MediaLeftPanel = (props: {
       </div>
 
       <ScrollArea className="flex-1 relative">
-        <TabsContent forceMount={true} value="provider">
+        <TabsContent forceMount={true} value="provider" key={media?.id}>
           <div className={`${tab === "provider" ? "block" : "hidden"}`}>
-            <MediaProvider />
+            <MediaProvider key={media?.id} />
           </div>
         </TabsContent>
         <TabsContent forceMount={true} value="recordings">
