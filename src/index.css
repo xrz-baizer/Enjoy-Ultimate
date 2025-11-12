@@ -114,6 +114,13 @@ body {
   }
 }
 
+/* Allow user interaction on waveform regions */
+.waveform-container,
+.waveform-container * {
+  user-select: auto;
+  -webkit-user-select: auto;
+}
+
 /* make scrollbar beautiful */
 ::-webkit-scrollbar {
   width: 10px;

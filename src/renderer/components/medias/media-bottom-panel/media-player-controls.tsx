@@ -219,8 +219,9 @@ export const MediaPlayerControls = () => {
     const existingRegion = regions.getRegions().find((r) => r.id === id);
     if (existingRegion &&
         Math.abs(existingRegion.start - currentSegment.startTime) < 0.001 &&
-        Math.abs(existingRegion.end - currentSegment.endTime) < 0.001) {
-      // Region already exists and is correct, no need to recreate
+        Math.abs(existingRegion.end - currentSegment.endTime) < 0.001 &&
+        (existingRegion as any).options?.resize === editingRegion) {
+      // Region already exists with correct position and resize state, no need to recreate
       return;
     }
 
